@@ -1,5 +1,6 @@
 import Feather from '@expo/vector-icons/Feather';
-import { ScrollView, View } from 'react-native';
+import { router } from 'expo-router';
+import { Pressable, ScrollView, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Card } from '@/components/ms/card';
@@ -80,6 +81,15 @@ export default function YouScreen() {
           </Card>
         ))}
       </View>
+      <Pressable onPress={() => router.push('/rive-test' as never)} style={{ marginTop: 12 }}>
+        <Card padding={12} style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+          <Feather name="play-circle" size={16} color={MS.color.ink} />
+          <Body size={13} style={{ flex: 1 }}>
+            Rive pipeline test (dev)
+          </Body>
+          <Feather name="chevron-right" size={15} color={MS.color.faint} />
+        </Card>
+      </Pressable>
       <Body size={11} color={MS.color.faint} style={{ marginTop: 16, textAlign: 'center' }}>
         API: {ping.isLoading ? 'checking…' : ping.data?.ok ? 'connected' : 'offline (fine for now)'}
       </Body>

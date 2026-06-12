@@ -25,6 +25,7 @@ export default function RootLayout() {
           <Stack.Screen name="journal" />
           <Stack.Screen name="activities" />
           <Stack.Screen name="support" options={{ presentation: 'modal' }} />
+          <Stack.Screen name="rive-test" />
         </Stack>
       </ThemeProvider>
     </ApiProvider>

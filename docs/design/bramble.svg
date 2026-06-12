@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 110 86" width="330" height="258">
+  <g id="shadow">
+    <ellipse cx="55" cy="81" rx="38" ry="5" fill="#8FD98A"/>
+  </g>
+  <g id="body">
+    <path id="body-base" d="M55 20 C27 20 18 43 22 58 C26 72 41 76 55 76 C69 76 84 72 88 58 C92 43 83 20 55 20 Z" fill="#8A6F4D" stroke="#2B2B26" stroke-width="2.5"/>
+    <path id="spikes" d="M55 16 C31 16 20 41 24 56 L28 52 L32 58 L38 50 L44 58 L50 50 L56 58 L62 50 L68 58 L74 50 L80 58 L86 52 L90 56 C94 41 79 16 55 16 Z" fill="#5C4634" stroke="#2B2B26" stroke-width="2.5" stroke-linejoin="round"/>
+  </g>
+  <g id="face">
+    <ellipse id="face-base" cx="55" cy="62" rx="20" ry="13" fill="#F4E3C5" stroke="#2B2B26" stroke-width="2.5"/>
+    <ellipse id="cheek-l" cx="42" cy="65" rx="4" ry="2.5" fill="#FFB173"/>
+    <ellipse id="cheek-r" cx="68" cy="65" rx="4" ry="2.5" fill="#FFB173"/>
+    <g id="eye-l">
+      <circle cx="47" cy="58" r="2.6" fill="#2B2B26"/>
+      <circle cx="48" cy="57" r="0.9" fill="#FFFFFF"/>
+    </g>
+    <g id="eye-r">
+      <circle cx="63" cy="58" r="2.6" fill="#2B2B26"/>
+      <circle cx="64" cy="57" r="0.9" fill="#FFFFFF"/>
+    </g>
+    <ellipse id="nose" cx="55" cy="67" rx="3.6" ry="2.8" fill="#2B2B26"/>
+    <path id="mouth" d="M46 71 Q55 77 64 71" stroke="#2B2B26" stroke-width="2.2" fill="none" stroke-linecap="round"/>
+  </g>
+</svg>
