@@ -1,7 +1,7 @@
 import Feather from '@expo/vector-icons/Feather';
 import { router } from 'expo-router';
-import { useEffect } from 'react';
-import { ScrollView, View } from 'react-native';
+import { useEffect, useState } from 'react';
+import { LayoutAnimation, Pressable, ScrollView, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Bramble } from '@/components/ms/bramble';
@@ -31,6 +31,7 @@ export default function HomeScreen() {
   const toggleTask = useWellness((s) => s.toggleTask);
   const clearBloom = useWellness((s) => s.clearBloom);
   const ensureToday = useWellness((s) => s.ensureToday);
+  const [sheetOpen, setSheetOpen] = useState(true);
 
   useEffect(() => {
     ensureToday();
@@ -43,6 +44,11 @@ export default function HomeScreen() {
     }
   }, [bloomPending, clearBloom]);
 
+  const toggleSheet = () => {
+    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+    setSheetOpen((o) => !o);
+  };
+
   const doneCount = tasks.filter((t) => t.done).length;
   const bubbleText = checkin
     ? flowers <= 1
@@ -54,7 +60,7 @@ export default function HomeScreen() {
 
   return (
     <View style={{ flex: 1, backgroundColor: MS.color.sky }}>
-      <View style={{ height: 320 }}>
+      <View style={sheetOpen ? { height: 320 } : { flex: 1 }}>
         <Garden flowers={flowers} />
         <View
           style={{
@@ -91,9 +97,11 @@ export default function HomeScreen() {
             <Feather name="bell" size={16} color={MS.color.ink} />
           </View>
         </View>
-        <View style={{ position: 'absolute', bottom: 58, left: 24 }}>
+        <Pressable
+          onPress={toggleSheet}
+          style={{ position: 'absolute', bottom: 58, left: 24 }}>
           <Bramble size={110} mood={checkin ? 'happy' : 'calm'} />
-        </View>
+        </Pressable>
         <SpeechBubble
           text={bubbleText}
           style={{ position: 'absolute', bottom: 132, left: 120, maxWidth: 180 }}
@@ -116,61 +124,100 @@ export default function HomeScreen() {
         )}
       </View>
 
-      <ScrollView
-        style={{
-          flex: 1,
-          marginTop: -24,
-          backgroundColor: MS.color.cream,
-          borderTopWidth: MS.border,
-          borderColor: MS.color.ink,
-          borderTopLeftRadius: 24,
-          borderTopRightRadius: 24,
-        }}
-        contentContainerStyle={{ padding: 16, paddingBottom: 28 }}>
-        <View
+      {sheetOpen ? (
+        <ScrollView
           style={{
-            width: 44,
-            height: 5,
-            backgroundColor: MS.color.ink,
-            opacity: 0.25,
-            borderRadius: 3,
-            alignSelf: 'center',
-            marginBottom: 10,
+            flex: 1,
+            marginTop: -24,
+            backgroundColor: MS.color.cream,
+            borderTopWidth: MS.border,
+            borderColor: MS.color.ink,
+            borderTopLeftRadius: 24,
+            borderTopRightRadius: 24,
           }}
-        />
-        <Heading size={17} style={{ marginBottom: 10 }}>
-          How are you feeling?
-        </Heading>
-        <MoodPicker
-          value={checkin?.mood}
-          onChange={(mood) => router.push({ pathname: '/check-in', params: { mood: String(mood) } })}
-        />
-        <View
-          style={{
-            flexDirection: 'row',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            marginTop: 18,
-            marginBottom: 10,
-          }}>
-          <Heading size={16}>Today&apos;s plan</Heading>
-          <BodyBold size={12} color={MS.color.muted}>
-            {doneCount} of {tasks.length} done
-          </BodyBold>
-        </View>
-        <View style={{ gap: 9 }}>
-          {tasks.map((t) => (
-            <TaskRow
-              key={t.id}
-              title={t.title}
-              icon={t.icon}
-              color={t.color}
-              done={t.done}
-              onToggle={() => toggleTask(t.id)}
+          contentContainerStyle={{ padding: 16, paddingBottom: 28 }}>
+          <Pressable onPress={toggleSheet} hitSlop={14}>
+            <View
+              style={{
+                width: 44,
+                height: 5,
+                backgroundColor: MS.color.ink,
+                opacity: 0.25,
+                borderRadius: 3,
+                alignSelf: 'center',
+                marginBottom: 10,
+              }}
             />
-          ))}
-        </View>
-      </ScrollView>
+          </Pressable>
+          <Heading size={17} style={{ marginBottom: 10 }}>
+            How are you feeling?
+          </Heading>
+          <MoodPicker
+            value={checkin?.mood}
+            onChange={(mood) =>
+              router.push({ pathname: '/check-in', params: { mood: String(mood) } })
+            }
+          />
+          <View
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              marginTop: 18,
+              marginBottom: 10,
+            }}>
+            <Heading size={16}>Today&apos;s plan</Heading>
+            <BodyBold size={12} color={MS.color.muted}>
+              {doneCount} of {tasks.length} done
+            </BodyBold>
+          </View>
+          <View style={{ gap: 9 }}>
+            {tasks.map((t) => (
+              <TaskRow
+                key={t.id}
+                title={t.title}
+                icon={t.icon}
+                color={t.color}
+                done={t.done}
+                onToggle={() => toggleTask(t.id)}
+              />
+            ))}
+          </View>
+        </ScrollView>
+      ) : (
+        <Pressable
+          onPress={toggleSheet}
+          style={{
+            backgroundColor: MS.color.cream,
+            borderTopWidth: MS.border,
+            borderColor: MS.color.ink,
+            borderTopLeftRadius: 24,
+            borderTopRightRadius: 24,
+            marginTop: -24,
+            paddingTop: 8,
+            paddingBottom: 12,
+            paddingHorizontal: 16,
+            alignItems: 'center',
+          }}>
+          <View
+            style={{
+              width: 44,
+              height: 5,
+              backgroundColor: MS.color.ink,
+              opacity: 0.25,
+              borderRadius: 3,
+              marginBottom: 6,
+            }}
+          />
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+            <Heading size={14}>How are you feeling?</Heading>
+            <BodyBold size={11} color={MS.color.muted}>
+              · {doneCount} of {tasks.length} done
+            </BodyBold>
+            <Feather name="chevron-up" size={15} color={MS.color.ink} />
+          </View>
+        </Pressable>
+      )}
     </View>
   );
 }
