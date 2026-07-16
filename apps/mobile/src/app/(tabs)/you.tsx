@@ -3,95 +3,88 @@ import { router } from 'expo-router';
 import { Pressable, ScrollView, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { Card } from '@/components/ms/card';
 import { HeaderPill } from '@/components/ms/header-pill';
+import { SettingsRow } from '@/components/ms/settings-row';
+import { SettingsSection } from '@/components/ms/settings-section';
 import { Body, BodyBold, Heading } from '@/components/ms/text';
 import { MS } from '@/constants/mindshed';
-import { trpc } from '@/lib/trpc';
+import { getGardenProgress } from '@/lib/garden-progress';
 import { useWellness } from '@/store/wellness';
-
-const SETTINGS = [
-  { icon: 'bell', label: 'Notifications — one nudge a day' },
-  { icon: 'lock', label: 'Data & privacy' },
-  { icon: 'download', label: 'Export my data' },
-  { icon: 'life-buoy', label: 'Help & resources' },
-] as const;
 
 export default function YouScreen() {
   const insets = useSafeAreaInsets();
-  const daysOfCare = useWellness((s) => s.checkins.length);
-  const ping = trpc.health.ping.useQuery(undefined, { retry: 1 });
+  const checkins = useWellness((state) => state.checkins);
+  const journal = useWellness((state) => state.journal);
+  const gardenGrowth = useWellness((state) => state.gardenGrowth);
+  const profileName = useWellness((state) => state.profileName);
+  const nudgeEnabled = useWellness((state) => state.nudgeEnabled);
+  const nudgeTime = useWellness((state) => state.nudgeTime);
+  const healthConnected = useWellness((state) => state.healthConnected);
+  const garden = getGardenProgress(gardenGrowth);
 
   return (
     <ScrollView
       style={{ flex: 1, backgroundColor: MS.color.cream }}
-      contentContainerStyle={{ paddingTop: insets.top + 12, padding: 16, paddingBottom: 32 }}>
-      <HeaderPill title="You" />
-      <Card style={{ marginTop: 16, flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-        <View
-          style={{
-            width: 46,
-            height: 46,
-            borderRadius: 23,
-            borderWidth: MS.border,
-            borderColor: MS.color.ink,
-            backgroundColor: MS.color.mint,
-            alignItems: 'center',
-            justifyContent: 'center',
-          }}>
-          <Heading size={18}>C</Heading>
+      contentContainerStyle={{ paddingTop: insets.top + 16, paddingHorizontal: 18, paddingBottom: 42 }}
+      showsVerticalScrollIndicator={false}>
+      <HeaderPill title="You" size={23} />
+      <Body size={12} color={MS.color.muted} style={{ marginTop: 6 }}>
+        Your preferences, privacy and progress.
+      </Body>
+
+      <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 24 }}>
+        <View style={{ width: 62, height: 62, borderRadius: 31, backgroundColor: MS.color.sageSoft, alignItems: 'center', justifyContent: 'center' }}>
+          <Heading size={21} color={MS.color.forest}>{profileName.trim().slice(0, 1).toUpperCase() || 'Y'}</Heading>
         </View>
-        <View style={{ flex: 1 }}>
-          <BodyBold size={15}>Callum</BodyBold>
-          <View
-            style={{
-              alignSelf: 'flex-start',
-              backgroundColor: MS.color.yellow,
-              borderWidth: 1.5,
-              borderColor: MS.color.ink,
-              borderRadius: 9,
-              paddingHorizontal: 8,
-              marginTop: 3,
-            }}>
-            <BodyBold size={10}>Dental pilot</BodyBold>
-          </View>
+        <View style={{ flex: 1, marginLeft: 13 }}>
+          <Heading size={19} color={MS.color.inkSoft}>{profileName || 'Your profile'}</Heading>
+          <Body size={11} color={MS.color.muted}>Dental student pilot</Body>
         </View>
-        <View style={{ alignItems: 'center' }}>
-          <Heading size={18}>{daysOfCare}</Heading>
-          <Body size={10} color={MS.color.muted}>
-            days of care
-          </Body>
-        </View>
-      </Card>
-      <Card color={MS.color.mint} padding={12} style={{ marginTop: 12, flexDirection: 'row', alignItems: 'center', gap: 9 }}>
-        <Feather name="mail" size={16} color={MS.color.ink} />
-        <BodyBold size={12}>Wellbeing pulse letters start with the pilot</BodyBold>
-      </Card>
-      <View style={{ gap: 9, marginTop: 12 }}>
-        {SETTINGS.map((s) => (
-          <Card
-            key={s.label}
-            padding={12}
-            style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-            <Feather name={s.icon as never} size={16} color={MS.color.ink} />
-            <Body size={13} style={{ flex: 1 }}>
-              {s.label}
-            </Body>
-            <Feather name="chevron-right" size={15} color={MS.color.faint} />
-          </Card>
-        ))}
+        <Pressable
+          onPress={() => router.push('/profile')}
+          accessibilityRole="button"
+          accessibilityLabel="Edit profile"
+          style={({ pressed }) => ({ width: 44, height: 44, borderRadius: 22, backgroundColor: MS.color.surface, alignItems: 'center', justifyContent: 'center', opacity: pressed ? 0.6 : 1 })}>
+          <Feather name="edit-2" size={16} color={MS.color.forest} />
+        </Pressable>
       </View>
-      <Pressable onPress={() => router.push('/rive-test' as never)} style={{ marginTop: 12 }}>
-        <Card padding={12} style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-          <Feather name="play-circle" size={16} color={MS.color.ink} />
-          <Body size={13} style={{ flex: 1 }}>
-            Rive pipeline test (dev)
-          </Body>
-          <Feather name="chevron-right" size={15} color={MS.color.faint} />
-        </Card>
-      </Pressable>
-      <Body size={11} color={MS.color.faint} style={{ marginTop: 16, textAlign: 'center' }}>
-        API: {ping.isLoading ? 'checking…' : ping.data?.ok ? 'connected' : 'offline (fine for now)'}
+
+      <View style={{ backgroundColor: MS.color.sageSoft, borderRadius: MS.radius.xl, padding: 16, marginTop: 20 }}>
+        <BodyBold size={10} color={MS.color.forestMuted} style={{ letterSpacing: 1.2 }}>YOUR CARE, SO FAR</BodyBold>
+        <View style={{ flexDirection: 'row', marginTop: 14 }}>
+          {[
+            { value: checkins.length, label: 'check-ins' },
+            { value: garden.unlocked.length, label: 'habitats' },
+            { value: journal.length, label: 'reflections' },
+          ].map((item, index) => (
+            <View key={item.label} style={{ flex: 1, paddingLeft: index ? 14 : 0, borderLeftWidth: index ? 1 : 0, borderLeftColor: `${MS.color.forest}18` }}>
+              <Heading size={22} color={MS.color.forest}>{item.value}</Heading>
+              <Body size={9.5} color={MS.color.forestMuted}>{item.label}</Body>
+            </View>
+          ))}
+        </View>
+      </View>
+
+      <SettingsSection label="Your care">
+        <SettingsRow icon="feather" title="Garden journal" detail={garden.current ? `Latest: ${garden.current.shortTitle}` : 'See how check-ins restore the habitat'} onPress={() => router.push('/garden-progress' as never)} />
+        <SettingsRow icon="shield" title="My support plan" detail="What I notice, what helps and who I can reach" onPress={() => router.push('/care-plan')} />
+        <SettingsRow icon="bell" title="Daily nudge" detail={nudgeEnabled ? `Once a day at ${nudgeTime}` : 'Off'} onPress={() => router.push('/daily-nudge')} last />
+      </SettingsSection>
+
+      <SettingsSection label="Preferences and privacy">
+        <SettingsRow icon="sliders" title="Accessibility and comfort" detail="Motion, sound and haptics" onPress={() => router.push('/accessibility')} />
+        <SettingsRow icon="heart" title="Phone health" detail={healthConnected ? 'Sleep and movement connected locally' : 'Optional sleep and movement context'} onPress={() => router.push('/health-data' as never)} />
+        <SettingsRow icon="shield" title="Privacy and data" detail="Storage, export and deletion" onPress={() => router.push('/privacy')} last />
+      </SettingsSection>
+
+      <SettingsSection label="MindSHED">
+        <SettingsRow icon="life-buoy" title="Help and resources" detail="Support from real people" onPress={() => router.push('/support')} />
+        <SettingsRow icon="info" title="About and pilot information" detail="Policies, research and app details" onPress={() => router.push('/about')} />
+        <SettingsRow icon="play-circle" title="Meet Bramble again" detail="Review the welcome without changing pilot access" onPress={() => router.push({ pathname: '/onboarding', params: { step: '1' } })} last />
+      </SettingsSection>
+
+      <Body size={10.5} color={MS.color.faint} style={{ textAlign: 'center', marginTop: 22 }}>
+        No broken streaks. No punishment. Your garden waits kindly.
       </Body>
     </ScrollView>
   );

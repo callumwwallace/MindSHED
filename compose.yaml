@@ -1,0 +1,19 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: mindshed
+      POSTGRES_USER: mindshed
+      POSTGRES_PASSWORD: mindshed-local-only
+    ports:
+      - "55432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U mindshed -d mindshed"]
+      interval: 2s
+      timeout: 3s
+      retries: 15
+    volumes:
+      - mindshed_postgres_data:/var/lib/postgresql/data
+
+volumes:
+  mindshed_postgres_data:

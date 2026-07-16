@@ -5,18 +5,9 @@ import { Heading } from './text';
 
 export function HeaderPill({ title, size = 20 }: { title: string; size?: number }) {
   return (
-    <View style={{ alignItems: 'center' }}>
-      <View
-        style={{
-          backgroundColor: MS.color.white,
-          borderRadius: MS.radius.lg,
-          borderWidth: MS.border,
-          borderColor: MS.color.ink,
-          paddingVertical: 8,
-          paddingHorizontal: 24,
-        }}>
-        <Heading size={size}>{title}</Heading>
-      </View>
+    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+      <View style={{ width: 4, height: 22, borderRadius: 2, backgroundColor: MS.color.sage }} />
+      <Heading size={size} color={MS.color.inkSoft}>{title}</Heading>
     </View>
   );
 }

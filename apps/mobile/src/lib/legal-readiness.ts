@@ -1,0 +1,5 @@
+export const LEGAL_DOCUMENTS_APPROVED =
+  process.env.EXPO_PUBLIC_LEGAL_DOCUMENTS_APPROVED === 'true';
+
+export const MARKETING_CONSENT_ENABLED =
+  process.env.EXPO_PUBLIC_ENABLE_MARKETING_CONSENT === 'true';

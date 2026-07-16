@@ -7,12 +7,19 @@
   ],
   "scripts": {
     "api": "npm run dev --workspace @mindshed/api",
+    "db:up": "docker compose up -d --wait postgres",
+    "db:down": "docker compose down",
     "mobile": "npm run start --workspace mobile",
     "mobile:tunnel": "npm run start:tunnel --workspace mobile",
+    "postinstall": "patch-package",
     "sim": "npm run sim --workspace mobile",
-    "typecheck": "npm run typecheck --workspaces --if-present"
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "verify": "npm run typecheck && npm run lint --workspace mobile && npm run test --workspace mobile && npm run test --workspace @mindshed/api"
   },
   "engines": {
     "node": ">=22"
+  },
+  "devDependencies": {
+    "patch-package": "^8.0.1"
   }
 }

@@ -21,8 +21,8 @@ export function Card({
         {
           backgroundColor: color,
           borderRadius: radius,
-          borderWidth: MS.border,
-          borderColor: MS.color.ink,
+          borderWidth: 1,
+          borderColor: `${MS.color.ink}1F`,
           padding,
         },
         style,

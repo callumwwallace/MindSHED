@@ -1,56 +1,48 @@
-# Welcome to your Expo app 👋
+# MindSHED mobile app
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+Expo SDK 56 application for the iOS and Android university pilot. Native builds
+use SQLCipher for local wellbeing data and the offline research queue, with the
+database key and pseudonymous pilot credentials held in Keychain/Keystore.
 
-## Get started
+## Local development
 
-1. Install dependencies
+1. Install workspace dependencies from the repository root with `npm install`.
+2. Copy `.env.example` to `.env` and set `EXPO_PUBLIC_API_URL`. A physical phone
+   needs the Mac's LAN address instead of `localhost`.
+3. Use `npm run sim` from the root for iOS, or `npm run android --workspace
+   mobile` for Android.
 
-   ```bash
-   npm install
-   ```
+Rive, SQLCipher, HealthKit and Health Connect require a native development
+build; Expo Go is not a valid security, animation or health-permission test
+environment. Rebuild the development client after changing native plugins or
+permissions. `EXPO_PUBLIC_LOCAL_PILOT_CODE` is an optional local-only helper and
+must not be configured in preview or production.
 
-2. Start the app
+The licensed SWEMWBS flow is available locally by default. Keep
+`EXPO_PUBLIC_ENABLE_SWEMWBS_UPLOADS=false` and
+`EXPO_PUBLIC_ENABLE_SWEMWBS_FEEDBACK=false` until their separate research,
+legal and Warwick digital-review evidence is recorded.
 
-   ```bash
-   npx expo start
-   ```
+Phone-health context is optional and read-only. The app requests only steps and
+sleep, stores at most 21 days of daily summaries in the encrypted local
+database, and does not add those summaries or derived observations to pilot
+research uploads. Disconnecting removes the cached summaries; clearing local
+data removes them as well. This boundary must remain aligned with the privacy
+policy, DPIA and Apple/Google store declarations.
 
-In the output, you'll find options to open the app in a
+## Verification
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+From the repository root:
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
-
-```bash
-npm run reset-project
+```sh
+npm run verify
+npx --yes expo-doctor@1.20.1 apps/mobile
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+The native generated projects are intentionally ignored and recreated by Expo
+prebuild/EAS. Production builds must set `EXPO_PUBLIC_API_URL` in the EAS
+production environment. Without it, a release fails closed against a reserved
+invalid hostname instead of silently attempting to contact localhost.
 
-### Other setup steps
-
-- To set up ESLint for linting, run `npx expo lint`, or follow our guide on ["Using ESLint and Prettier"](https://docs.expo.dev/guides/using-eslint/)
-- If you'd like to set up unit testing, follow our guide on ["Unit Testing with Jest"](https://docs.expo.dev/develop/unit-testing/)
-- Learn more about the TypeScript setup in this template in our guide on ["Using TypeScript"](https://docs.expo.dev/guides/typescript/)
-
-## Learn more
-
-To learn more about developing your project with Expo, look at the following resources:
-
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
-
-## Join the community
-
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+Build profiles are defined in `eas.json`: development client, internal preview,
+and auto-incrementing store production.
