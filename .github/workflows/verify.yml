@@ -24,6 +24,9 @@ jobs:
           node-version-file: .nvmrc
           cache: npm
       - run: npm ci
+      - name: Generate Expo TypeScript environment
+        working-directory: apps/mobile
+        run: npx expo customize tsconfig.json
       - run: npm run typecheck
       - run: npm run lint --workspace mobile
       - run: npm run test --workspace mobile
