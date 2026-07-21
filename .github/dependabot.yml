@@ -5,11 +5,15 @@ updates:
     schedule:
       interval: weekly
     open-pull-requests-limit: 5
+    # Avoid rewriting compatible ranges for every patch. Updating only the
+    # resolved lockfile version also prevents duplicate workspace installs.
+    versioning-strategy: increase-if-necessary
     groups:
       expo-sdk-56:
         patterns:
           - "expo*"
           - "@expo/*"
+          - "eslint-config-expo"
         update-types:
           - patch
       runtime-minor-patch:
@@ -31,6 +35,9 @@ updates:
         update-types:
           - "version-update:semver-major"
       - dependency-name: "@expo/*"
+        update-types:
+          - "version-update:semver-major"
+      - dependency-name: "eslint-config-expo"
         update-types:
           - "version-update:semver-major"
 
@@ -57,6 +64,12 @@ updates:
       - dependency-name: "typescript"
         update-types:
           - "version-update:semver-minor"
+          - "version-update:semver-major"
+
+      # Keep the compile-time Node API aligned with the Node 22 runtime in
+      # `.nvmrc`; patch and minor type updates within v22 remain enabled.
+      - dependency-name: "@types/node"
+        update-types:
           - "version-update:semver-major"
 
   - package-ecosystem: github-actions
