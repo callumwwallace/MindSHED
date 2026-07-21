@@ -54,7 +54,7 @@ export default function JournalScreen() {
       <View style={{ flex: 1 }}>
         <ShedInterior />
         <View pointerEvents="none" style={{ position: 'absolute', inset: 0, backgroundColor: 'rgba(8,18,19,0.08)' }} />
-        <Pressable onPress={() => goBackOrReplace('/')} accessibilityRole="button" accessibilityLabel="Go back" style={{ position: 'absolute', left: 18, top: insets.top + 10, width: 44, height: 44, borderRadius: 22, backgroundColor: 'rgba(255,254,247,0.92)', alignItems: 'center', justifyContent: 'center' }}><Feather name="arrow-left" size={18} color={MS.color.forest} /></Pressable>
+        <Pressable onPress={() => goBackOrReplace('/(tabs)/places')} accessibilityRole="button" accessibilityLabel="Back to Places" style={{ position: 'absolute', left: 18, top: insets.top + 10, width: 44, height: 44, borderRadius: 22, backgroundColor: 'rgba(255,254,247,0.92)', alignItems: 'center', justifyContent: 'center' }}><Feather name="arrow-left" size={18} color={MS.color.forest} /></Pressable>
         <View style={{ position: 'absolute', right: 18, top: insets.top + 15, flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: 'rgba(18,33,34,0.78)', borderRadius: 16, paddingVertical: 7, paddingHorizontal: 10 }}><Feather name="moon" size={12} color={MS.color.surface} /><BodyBold size={9.5} color={MS.color.surface}>BRAMBLE IS ASLEEP</BodyBold></View>
         {!writerOpen && <>
           <View style={{ position: 'absolute', right: 14, top: nestTop }}><SleepingBrambleNest size={nestSize} /></View>

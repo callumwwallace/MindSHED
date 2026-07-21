@@ -52,10 +52,10 @@ export default function SupportScreen() {
       <View style={{ flexDirection: 'row', alignItems: 'center' }}>
         <Pressable
           onPress={() => goBackOrReplace('/(tabs)/places')}
-          accessibilityLabel="Close support"
+          accessibilityLabel="Back to Places"
           accessibilityRole="button"
           style={{ width: 44, height: 44, borderRadius: 22, backgroundColor: MS.color.surface, alignItems: 'center', justifyContent: 'center' }}>
-          <Feather name="x" size={16} color={MS.color.forest} />
+          <Feather name="arrow-left" size={17} color={MS.color.forest} />
         </Pressable>
         <BodyBold size={9.5} color={MS.color.forestMuted} style={{ marginLeft: 12, letterSpacing: 1.3 }}>REAL PEOPLE, RIGHT NOW</BodyBold>
       </View>

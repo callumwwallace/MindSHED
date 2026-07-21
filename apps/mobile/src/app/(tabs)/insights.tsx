@@ -124,7 +124,7 @@ function WeeklyChart({ days }: { days: WeekDay[] }) {
   const segments = chartSegments(days);
 
   return (
-    <View style={{ position: 'absolute', left: 15, right: 15, bottom: 14, borderRadius: 27, backgroundColor: 'rgba(255,253,246,0.96)', paddingTop: 16, paddingHorizontal: 16, paddingBottom: 13, shadowColor: '#294638', shadowOpacity: 0.13, shadowRadius: 18, shadowOffset: { width: 0, height: 8 }, elevation: 5 }}>
+    <View style={{ position: 'absolute', left: 15, right: 15, bottom: 0, borderRadius: 27, backgroundColor: 'rgba(255,253,246,0.96)', paddingTop: 14, paddingHorizontal: 16, paddingBottom: 11, shadowColor: '#294638', shadowOpacity: 0.13, shadowRadius: 18, shadowOffset: { width: 0, height: 8 }, elevation: 5 }}>
       <View style={{ flexDirection: 'row', alignItems: 'center' }}>
         <View style={{ flex: 1 }}>
           <BodyBold size={9.5} color={MS.color.forestMuted}>LAST SEVEN DAYS</BodyBold>
@@ -135,8 +135,8 @@ function WeeklyChart({ days }: { days: WeekDay[] }) {
         </View>
       </View>
 
-      <View style={{ marginTop: 8 }}>
-        <Svg width="100%" height={112} viewBox="0 0 320 112">
+      <View style={{ marginTop: 4 }}>
+        <Svg width="100%" height={88} viewBox="0 0 320 112">
           <Path d="M12 25 H308 M12 54 H308 M12 83 H308" stroke="#315B45" strokeWidth="1" opacity="0.08" />
           {segments.map((segment, index) => segment.length > 1 && <Path key={`segment-${index}`} d={segment.map((point, pointIndex) => `${pointIndex ? 'L' : 'M'} ${point.x} ${point.y}`).join(' ')} stroke="#315B45" strokeWidth="3.2" fill="none" strokeLinecap="round" strokeLinejoin="round" />)}
           {days.map((day, index) => {
@@ -149,12 +149,12 @@ function WeeklyChart({ days }: { days: WeekDay[] }) {
             );
           })}
         </Svg>
-        <View style={{ flexDirection: 'row', marginTop: -15 }}>
+        <View style={{ flexDirection: 'row', marginTop: -13 }}>
           {days.map((day) => <BodyBold key={day.key} size={8.5} color={day.checkin ? MS.color.forest : MS.color.faint} style={{ flex: 1, textAlign: 'center' }}>{day.date.toLocaleDateString('en-GB', { weekday: 'narrow' })}</BodyBold>)}
         </View>
       </View>
 
-      <View style={{ flexDirection: 'row', marginTop: 11, paddingTop: 11, borderTopWidth: 1, borderTopColor: `${MS.color.ink}0F` }}>
+      <View style={{ flexDirection: 'row', marginTop: 8, paddingTop: 9, borderTopWidth: 1, borderTopColor: `${MS.color.ink}0F` }}>
         {([
           { label: 'Mood', value: summary.mood, icon: 'heart', color: '#4F755D' },
           { label: 'Energy', value: summary.energy, icon: 'sun', color: '#99752E' },
@@ -172,15 +172,16 @@ function WeeklyChart({ days }: { days: WeekDay[] }) {
 
 function PondScene({ days, message }: { days: WeekDay[]; message: string }) {
   return (
-    <View style={{ height: 685, marginHorizontal: -17, marginTop: 2, overflow: 'hidden' }}>
+    <View style={{ height: 613, marginHorizontal: -17, marginTop: 5, overflow: 'hidden' }}>
       <PondBackdrop />
-      <View style={{ position: 'absolute', left: 18, top: 292, width: 116, height: 122, justifyContent: 'flex-end' }}>
-        <View style={{ position: 'absolute', left: 20, bottom: 8, width: 90, height: 15, borderRadius: 50, backgroundColor: 'rgba(37,64,43,0.2)' }} />
-        <AnimatedBramble size={112} state="listen" mood="calm" />
+      <View style={{ position: 'absolute', left: 22, top: 268, width: 90, height: 92, justifyContent: 'flex-end' }}>
+        <View style={{ position: 'absolute', left: 12, bottom: 4, width: 70, height: 11, borderRadius: 50, backgroundColor: 'rgba(37,64,43,0.22)' }} />
+        <AnimatedBramble size={84} state="listen" mood="calm" />
       </View>
-      <View style={{ position: 'absolute', right: 18, top: 309, width: 215, borderRadius: 20, backgroundColor: 'rgba(255,253,246,0.84)', paddingHorizontal: 14, paddingVertical: 11 }}>
+      <View style={{ position: 'absolute', right: 18, top: 265, width: 224, borderRadius: 20, backgroundColor: 'rgba(255,253,246,0.9)', paddingHorizontal: 14, paddingVertical: 10 }}>
         <BodyBold size={9} color={MS.color.forestMuted}>BRAMBLE NOTICED</BodyBold>
         <CharacterText size={12.5} color={MS.color.inkSoft} style={{ marginTop: 4, lineHeight: 17 }}>{message}</CharacterText>
+        <View style={{ position: 'absolute', left: -7, bottom: 16, width: 14, height: 14, backgroundColor: 'rgba(255,253,246,0.9)', transform: [{ rotate: '45deg' }] }} />
       </View>
       <WeeklyChart days={days} />
     </View>

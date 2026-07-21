@@ -14,12 +14,14 @@ import Svg, {
 
 import { MS } from '@/constants/mindshed';
 import type { GardenRestStateId } from '@/lib/garden-progress';
+import { GroundShadow } from './ground-shadow';
 import { ShedExterior } from './shed-exterior';
 
 export const GARDEN_HOTSPOTS = {
   shed: { left: '77%' as const, top: '24%' as const, width: '16%' as const, height: '17%' as const },
   bench: { left: '3%' as const, top: '39%' as const, width: '35%' as const, height: '14%' as const },
   pond: { left: '65%' as const, top: '40%' as const, width: '35%' as const, height: '17%' as const },
+  gate: { left: '1%' as const, top: '68%' as const, width: '40%' as const, height: '20%' as const },
 } as const;
 
 interface GardenProps {
@@ -123,12 +125,16 @@ export function Garden({
         {/* Atmospheric background. */}
         <Rect width="390" height="844" fill="url(#gardenSky)" />
         <Circle cx="61" cy="77" r="25" fill={dusk ? '#EFC78E' : '#EED47C'} opacity="0.9" />
-        <G fill="#FFFDF3" opacity={weather === 'rain' ? 0.38 : 0.66}>
-          <Path d="M92 91 C102 72 126 72 137 87 C151 74 178 79 182 96 C161 103 118 104 92 91 Z" />
-          {weather !== 'clear' && <Path d="M271 116 C282 94 310 93 321 109 C339 97 366 107 367 124 C338 130 299 130 271 116 Z" />}
+        <G opacity={weather === 'rain' ? 0.38 : 0.72}>
+          <Path d="M92 91 C102 72 126 72 137 87 C151 74 178 79 182 96 C161 103 118 104 92 91 Z" fill="#C9D2C9" opacity="0.62" transform="translate(0 4)" />
+          <Path d="M92 91 C102 72 126 72 137 87 C151 74 178 79 182 96 C161 103 118 104 92 91 Z" fill="#FFFDF3" />
+          {weather !== 'clear' && <>
+            <Path d="M271 116 C282 94 310 93 321 109 C339 97 366 107 367 124 C338 130 299 130 271 116 Z" fill="#C9D2C9" opacity="0.62" transform="translate(0 4)" />
+            <Path d="M271 116 C282 94 310 93 321 109 C339 97 366 107 367 124 C338 130 299 130 271 116 Z" fill="#FFFDF3" />
+          </>}
         </G>
-        <Path d="M-25 254 C25 205 76 195 119 228 C155 187 210 189 246 230 C288 189 348 196 418 246 L418 347 L-25 347 Z" fill={dusk ? '#5D7775' : '#759890'} />
-        <Path d="M-30 296 C42 240 106 244 149 278 C205 232 272 240 311 279 C347 247 387 250 426 273 L426 370 L-30 370 Z" fill={dusk ? '#6E8377' : '#91AA8D'} />
+        <Path d="M-25 254 C25 205 76 195 119 228 C155 187 210 189 246 230 C288 189 348 196 418 246 L418 347 L-25 347 Z" fill={dusk ? '#526E70' : '#759890'} opacity="0.62" />
+        <Path d="M-30 296 C42 240 106 244 149 278 C205 232 272 240 311 279 C347 247 387 250 426 273 L426 370 L-30 370 Z" fill={dusk ? '#667D74' : '#91AA8D'} opacity="0.82" />
         <Path d="M-25 340 C70 291 151 311 212 338 C283 371 345 315 420 314 L420 396 L-25 396 Z" fill={resting ? '#9EAD87' : '#B8CA98'} />
         <G stroke="#6D7E65" strokeWidth="2" opacity="0.34">
           <Path d="M0 321 Q48 304 96 319 M13 330 v20 M54 316 v24 M91 319 v22" />
@@ -173,13 +179,16 @@ export function Garden({
         </G>
 
         {/* A mature canopy frames the shed and prevents the skyline becoming a row of icons. */}
-        <G transform="translate(-8 42)"><Leaves resting={resting} /></G>
+        <G transform="translate(-8 42)">
+          <GroundShadow cx={127} cy={325} rx={65} ry={10} opacity={0.22} />
+          <Leaves resting={resting} />
+        </G>
 
         <ShedExterior dusk={dusk} habitatComplete={growth >= 18} />
 
         {/* Bench: back, seat and legs share one three-quarter perspective. */}
         <G aria-label="Curved timber garden bench" transform="translate(17 348)">
-          <Ellipse cx="61" cy="78" rx="58" ry="9" fill="#315343" opacity="0.2" />
+          <GroundShadow cx={61} cy={78} rx={58} ry={9} />
           <Path d="M5 21 C34 3 70 3 103 17 L100 29 C69 18 36 18 8 34 Z" fill="#8B6047" stroke="#493B35" strokeWidth="2.2" />
           <Path d="M11 46 C37 34 69 34 97 44 L90 58 C64 50 39 51 15 62 Z" fill="#76513F" stroke="#403734" strokeWidth="2.2" />
           <Path d="M15 62 C39 53 65 53 90 59 L85 65 C62 60 40 61 19 68 Z" fill="#A87552" stroke="#493B35" strokeWidth="1.7" />
@@ -274,7 +283,7 @@ export function Garden({
 
         {/* The gate is a permanent destination and fills the lower garden with purpose. */}
         <G aria-label="Willow garden gate" transform="translate(9 585)">
-          <Ellipse cx="79" cy="148" rx="75" ry="12" fill="#26483C" opacity="0.2" />
+          <GroundShadow cx={79} cy={148} rx={75} ry={12} opacity={0.22} />
           <Path d="M-3 144 C34 133 91 133 141 145 C108 160 37 162 -3 149 Z" fill="#638061" opacity="0.72" />
           <Path d="M13 139 V52 C35 12 91 5 122 48 V139" fill="none" stroke="#5D4739" strokeWidth="11" strokeLinecap="round" />
           <Path d="M21 139 V62 C45 34 84 31 112 60 V139" fill="none" stroke="#927051" strokeWidth="5" />

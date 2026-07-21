@@ -48,7 +48,7 @@ export default function QuietGardenScreen() {
           feedback.select();
           respond('listen', 'We can sit here as long as you like.');
         }}
-        style={({ pressed }) => ({ position: 'absolute', ...GARDEN_HOTSPOTS.bench, borderRadius: 30, backgroundColor: pressed ? 'rgba(255,254,247,0.13)' : 'transparent' })}
+        style={{ position: 'absolute', ...GARDEN_HOTSPOTS.bench }}
       />
       <Pressable
         accessibilityLabel="Look at the pond"
@@ -57,7 +57,7 @@ export default function QuietGardenScreen() {
           feedback.select();
           respond('notice', 'I think I saw something move under the lily pad.');
         }}
-        style={({ pressed }) => ({ position: 'absolute', ...GARDEN_HOTSPOTS.pond, borderRadius: 42, backgroundColor: pressed ? 'rgba(218,239,230,0.14)' : 'transparent' })}
+        style={{ position: 'absolute', ...GARDEN_HOTSPOTS.pond }}
       />
 
       <Pressable

@@ -1,5 +1,7 @@
 import { Circle, Defs, Ellipse, G, LinearGradient, Line, Path, Rect, Stop } from 'react-native-svg';
 
+import { GroundShadow } from './ground-shadow';
+
 export function ShedExterior({ dusk = false, habitatComplete = false }: { dusk?: boolean; habitatComplete?: boolean }) {
   return (
     <G aria-label="Bramble's round-roof garden studio">
@@ -9,7 +11,7 @@ export function ShedExterior({ dusk = false, habitatComplete = false }: { dusk?:
         <LinearGradient id="newShedGlass" x1="0" y1="0" x2="1" y2="1"><Stop offset="0" stopColor="#FFF0B0" /><Stop offset="1" stopColor="#E4A85E" /></LinearGradient>
       </Defs>
 
-      <Ellipse cx="291" cy="345" rx="101" ry="19" fill="#29443B" opacity="0.17" />
+      <GroundShadow cx={291} cy={345} rx={101} ry={19} opacity={0.22} />
 
       {/* A side-on garden studio with one readable barrel roof. */}
       <Path d="M211 181 Q211 163 229 163 H348 Q366 163 366 181 V334 H211 Z" fill="url(#newShedWall)" stroke="#34453F" strokeWidth="2.8" />

@@ -3,7 +3,6 @@ import { router } from 'expo-router';
 import { Pressable, ScrollView, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { HeaderPill } from '@/components/ms/header-pill';
 import { SettingsRow } from '@/components/ms/settings-row';
 import { SettingsSection } from '@/components/ms/settings-section';
 import { Body, BodyBold, Heading } from '@/components/ms/text';
@@ -11,7 +10,7 @@ import { MS } from '@/constants/mindshed';
 import { getGardenProgress } from '@/lib/garden-progress';
 import { useWellness } from '@/store/wellness';
 
-export default function YouScreen() {
+export default function ProfileScreen() {
   const insets = useSafeAreaInsets();
   const checkins = useWellness((state) => state.checkins);
   const journal = useWellness((state) => state.journal);
@@ -27,14 +26,11 @@ export default function YouScreen() {
       style={{ flex: 1, backgroundColor: MS.color.cream }}
       contentContainerStyle={{ paddingTop: insets.top + 16, paddingHorizontal: 18, paddingBottom: 42 }}
       showsVerticalScrollIndicator={false}>
-      <HeaderPill title="You" size={23} />
-      <Body size={12} color={MS.color.muted} style={{ marginTop: 6 }}>
-        Your preferences, privacy and progress.
-      </Body>
-
-      <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 24 }}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 4 }}>
         <View style={{ width: 62, height: 62, borderRadius: 31, backgroundColor: MS.color.sageSoft, alignItems: 'center', justifyContent: 'center' }}>
-          <Heading size={21} color={MS.color.forest}>{profileName.trim().slice(0, 1).toUpperCase() || 'Y'}</Heading>
+          {profileName.trim()
+            ? <Heading size={21} color={MS.color.forest}>{profileName.trim().slice(0, 1).toUpperCase()}</Heading>
+            : <Feather name="user" size={21} color={MS.color.forest} />}
         </View>
         <View style={{ flex: 1, marginLeft: 13 }}>
           <Heading size={19} color={MS.color.inkSoft}>{profileName || 'Your profile'}</Heading>

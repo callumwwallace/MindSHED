@@ -1,24 +1,8 @@
-import Feather from '@expo/vector-icons/Feather';
 import { Tabs } from 'expo-router';
-import { Platform, View } from 'react-native';
+import { Platform } from 'react-native';
 
+import { WorldTabIcon } from '@/components/ms/world-tab-icon';
 import { MS } from '@/constants/mindshed';
-
-function TabIcon({ name, focused }: { name: string; focused: boolean }) {
-  return (
-    <View
-      style={{
-        width: 46,
-        height: 30,
-        backgroundColor: focused ? MS.color.sageSoft : 'transparent',
-        borderRadius: 15,
-        alignItems: 'center',
-        justifyContent: 'center',
-      }}>
-      <Feather name={name as never} size={18} color={focused ? MS.color.forest : MS.color.faint} />
-    </View>
-  );
-}
 
 export default function TabsLayout() {
   return (
@@ -26,50 +10,50 @@ export default function TabsLayout() {
       screenOptions={{
         headerShown: false,
         tabBarStyle: {
-          backgroundColor: MS.color.surface,
+          backgroundColor: '#FAF0D5',
           borderTopWidth: 1,
-          borderTopColor: `${MS.color.ink}18`,
-          height: Platform.OS === 'ios' ? 82 : 70,
-          paddingTop: 8,
+          borderTopColor: `${MS.color.forest}14`,
+          height: Platform.OS === 'ios' ? 80 : 68,
+          paddingTop: 7,
           paddingBottom: Platform.OS === 'ios' ? 8 : 6,
           shadowColor: MS.color.shadow,
-          shadowOpacity: 0.08,
-          shadowRadius: 12,
+          shadowOpacity: 0.03,
+          shadowRadius: 8,
           shadowOffset: { width: 0, height: -4 },
           elevation: 8,
         },
-        tabBarIconStyle: { height: 32 },
-        tabBarItemStyle: { paddingVertical: 2 },
+        tabBarIconStyle: { height: 30 },
+        tabBarItemStyle: { paddingVertical: 1 },
         tabBarActiveTintColor: MS.color.forest,
-        tabBarInactiveTintColor: MS.color.faint,
-        tabBarLabelStyle: { fontFamily: MS.font.bodyBold, fontSize: 10.5 },
+        tabBarInactiveTintColor: '#7A8077',
+        tabBarLabelStyle: { fontFamily: MS.font.bodyBold, fontSize: 10 },
       }}>
       <Tabs.Screen
         name="index"
         options={{
           title: 'Home',
-          tabBarIcon: ({ focused }) => <TabIcon name="home" focused={focused} />,
+          tabBarIcon: ({ focused }) => <WorldTabIcon name="shed" focused={focused} />,
         }}
       />
       <Tabs.Screen
         name="insights"
         options={{
           title: 'Wellbeing',
-          tabBarIcon: ({ focused }) => <TabIcon name="trending-up" focused={focused} />,
+          tabBarIcon: ({ focused }) => <WorldTabIcon name="wellbeing" focused={focused} />,
         }}
       />
       <Tabs.Screen
         name="places"
         options={{
           title: 'Places',
-          tabBarIcon: ({ focused }) => <TabIcon name="map-pin" focused={focused} />,
+          tabBarIcon: ({ focused }) => <WorldTabIcon name="gate" focused={focused} />,
         }}
       />
       <Tabs.Screen
         name="you"
         options={{
-          title: 'You',
-          tabBarIcon: ({ focused }) => <TabIcon name="user" focused={focused} />,
+          title: 'Profile',
+          tabBarIcon: ({ focused }) => <WorldTabIcon name="profile" focused={focused} />,
         }}
       />
     </Tabs>

@@ -9,6 +9,8 @@ import Svg, {
   Stop,
 } from 'react-native-svg';
 
+import { GroundShadow } from './ground-shadow';
+
 export type BrambleMood = 'happy' | 'calm' | 'sleepy';
 export type BramblePose =
   | 'standing'
@@ -142,7 +144,7 @@ function StandingHedgehog({
         </RadialGradient>
       </Defs>
 
-      <Ellipse cx="123" cy="156" rx={walking ? 87 : 90} ry="6.5" fill="#294A40" opacity="0.17" />
+      <GroundShadow cx={123} cy={156} rx={walking ? 87 : 90} ry={6.5} opacity={walking ? 0.16 : 0.2} />
 
       {/* Four attached, load-bearing legs establish the quadruped skeleton. */}
       <ShortLeg x={rearFarX} y={148} far />
@@ -226,7 +228,7 @@ function CurledHedgehog({ size, sleeping }: { size: number; sleeping: boolean })
           <Stop offset="1" stopColor="#BE6D53" />
         </RadialGradient>
       </Defs>
-      <Ellipse cx="121" cy="151" rx="84" ry="7" fill="#294A40" opacity="0.18" />
+      <GroundShadow cx={121} cy={151} rx={84} ry={7} />
       <Path
         d="M42 128 L27 118 L36 104 L24 91 L39 80 L32 65 L51 60 L53 45 L72 48 L84 33 L99 44 L116 30 L129 45 L148 37 L157 55 L175 57 L177 75 L194 84 L190 102 L201 116 C191 139 160 150 122 149 C84 149 54 142 42 128 Z"
         fill="url(#curledQuills)"
