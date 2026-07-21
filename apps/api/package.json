@@ -34,7 +34,7 @@
   },
   "devDependencies": {
     "@trpc/client": "^11.17.0",
-    "@types/node": "^25.9.3",
+    "@types/node": "^26.1.1",
     "drizzle-kit": "^0.31.10",
     "tsup": "^8.5.1",
     "tsx": "^4.22.4",
