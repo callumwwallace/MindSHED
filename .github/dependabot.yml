@@ -12,11 +12,52 @@ updates:
           - "@expo/*"
         update-types:
           - patch
-      production-minor-patch:
-        dependency-type: production
+      runtime-minor-patch:
+        patterns:
+          - "@fastify/*"
+          - "@trpc/*"
+          - "drizzle-*"
+          - "fastify"
+          - "postgres"
+          - "superjson"
+          - "zod"
         update-types:
           - minor
           - patch
+    ignore:
+      # Expo SDK upgrades are coordinated separately; allow compatible patches
+      # through the expo-sdk-56 group while blocking the next SDK major.
+      - dependency-name: "expo*"
+        update-types:
+          - "version-update:semver-major"
+      - dependency-name: "@expo/*"
+        update-types:
+          - "version-update:semver-major"
+
+      # These versions are selected by Expo SDK 56 and should be changed with
+      # `npx expo install --fix`, not independent Dependabot pull requests.
+      - dependency-name: "@react-native-async-storage/async-storage"
+      - dependency-name: "react"
+      - dependency-name: "react-dom"
+      - dependency-name: "react-native"
+      - dependency-name: "react-native-gesture-handler"
+      - dependency-name: "react-native-nitro-modules"
+      - dependency-name: "react-native-reanimated"
+      - dependency-name: "react-native-safe-area-context"
+      - dependency-name: "react-native-screens"
+      - dependency-name: "react-native-svg"
+      - dependency-name: "react-native-web"
+      - dependency-name: "react-native-worklets"
+
+      # The current Expo lint and TypeScript toolchain does not support the next
+      # major versions yet; continue accepting compatible updates in-place.
+      - dependency-name: "eslint"
+        update-types:
+          - "version-update:semver-major"
+      - dependency-name: "typescript"
+        update-types:
+          - "version-update:semver-minor"
+          - "version-update:semver-major"
 
   - package-ecosystem: github-actions
     directory: /
