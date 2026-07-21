@@ -21,19 +21,19 @@
     "db:studio": "drizzle-kit studio"
   },
   "dependencies": {
-    "@fastify/cors": "^11.2.0",
+    "@fastify/cors": "^11.3.0",
     "@fastify/helmet": "^13.1.0",
     "@fastify/rate-limit": "^10.3.0",
     "@mindshed/shared": "*",
-    "@trpc/server": "^11.17.0",
+    "@trpc/server": "^11.18.0",
     "drizzle-orm": "^0.45.2",
-    "fastify": "^5.8.5",
+    "fastify": "^5.10.0",
     "postgres": "^3.4.9",
     "superjson": "^2.2.6",
     "zod": "^3.25.76"
   },
   "devDependencies": {
-    "@trpc/client": "^11.17.0",
+    "@trpc/client": "^11.18.0",
     "@types/node": "^25.9.3",
     "drizzle-kit": "^0.31.10",
     "tsup": "^8.5.1",
