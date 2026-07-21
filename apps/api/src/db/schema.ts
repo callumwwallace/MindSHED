@@ -78,6 +78,10 @@ export const pilotConsents = pgTable(
     uniqueIndex("pilot_consents_one_active_idx")
       .on(table.participantId)
       .where(sql`${table.supersededAt} is null`),
+    check(
+      "pilot_consents_health_requires_research_check",
+      sql`not ${table.healthDataConsent} or ${table.researchConsent}`,
+    ),
   ],
 );
 
@@ -95,11 +99,16 @@ export const pilotEvents = pgTable(
   },
   (table) => [
     index("pilot_events_participant_idx").on(table.participantId, table.relativeDay),
+    uniqueIndex("pilot_events_one_kind_per_day_idx").on(
+      table.participantId,
+      table.relativeDay,
+      table.kind,
+    ),
     check("pilot_events_schema_version_check", sql`${table.schemaVersion} = 1`),
     check("pilot_events_relative_day_check", sql`${table.relativeDay} between 0 and 366`),
     check(
       "pilot_events_kind_check",
-      sql`${table.kind} in ('checkin', 'pulse', 'engagement')`,
+      sql`${table.kind} in ('checkin', 'pulse')`,
     ),
     check("pilot_events_payload_object_check", sql`jsonb_typeof(${table.payload}) = 'object'`),
   ],

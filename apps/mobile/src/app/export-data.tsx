@@ -26,6 +26,7 @@ export default function ExportDataScreen() {
   const prepared = status === 'ready';
 
   const prepareExport = async () => {
+    let temporaryFile: File | undefined;
     setStatus('preparing');
     setError('');
     setWarning('');
@@ -81,19 +82,25 @@ export default function ExportDataScreen() {
         },
       };
       const day = exportedAt.slice(0, 10);
-      const file = new File(Paths.cache, `mindshed-export-${day}.json`);
-      file.create({ overwrite: true });
-      file.write(JSON.stringify(payload, null, 2));
-      await Sharing.shareAsync(file.uri, {
+      temporaryFile = new File(Paths.cache, `mindshed-export-${day}.json`);
+      temporaryFile.create({ overwrite: true });
+      temporaryFile.write(JSON.stringify(payload, null, 2));
+      await Sharing.shareAsync(temporaryFile.uri, {
         dialogTitle: 'Save or share your MindSHED data',
         mimeType: 'application/json',
         UTI: 'public.json',
       });
-      file.delete();
       setStatus('ready');
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : 'The export could not be prepared. Please try again.');
       setStatus('error');
+    } finally {
+      try {
+        temporaryFile?.delete();
+      } catch {
+        // A share target may already have moved or removed the cache file.
+        // Cache storage is also cleared by the OS and overwritten next export.
+      }
     }
   };
 

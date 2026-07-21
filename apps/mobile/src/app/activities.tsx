@@ -1,5 +1,4 @@
 import Feather from '@expo/vector-icons/Feather';
-import { router } from 'expo-router';
 import { useState } from 'react';
 import { Pressable, ScrollView, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -9,6 +8,7 @@ import { BrambleDialogue } from '@/components/ms/bramble-dialogue';
 import { Body, BodyBold, Heading } from '@/components/ms/text';
 import { MS } from '@/constants/mindshed';
 import { feedback } from '@/lib/haptics';
+import { goBackOrReplace } from '@/lib/navigation';
 import { useWellness } from '@/store/wellness';
 
 interface Activity {
@@ -71,7 +71,7 @@ export default function ActivitiesScreen() {
       showsVerticalScrollIndicator={false}>
       <View style={{ flexDirection: 'row', alignItems: 'center' }}>
         <Pressable
-          onPress={() => router.back()}
+          onPress={() => goBackOrReplace('/(tabs)/places')}
           accessibilityLabel="Go back"
           accessibilityRole="button"
           style={{ width: 44, height: 44, borderRadius: 22, backgroundColor: MS.color.surface, alignItems: 'center', justifyContent: 'center' }}>

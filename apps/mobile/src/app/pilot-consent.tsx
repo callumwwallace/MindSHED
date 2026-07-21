@@ -13,9 +13,10 @@ import { ScreenHeader } from '@/components/ms/screen-header';
 import { Body, BodyBold, Heading } from '@/components/ms/text';
 import { MS } from '@/constants/mindshed';
 import { LEGAL_DOCUMENTS_APPROVED, MARKETING_CONSENT_ENABLED } from '@/lib/legal-readiness';
+import { goBackOrReplace } from '@/lib/navigation';
+import { requestResearchOptOut } from '@/lib/pilot-governance';
 import { getPilotIdentity } from '@/lib/pilot-identity';
 import { apiClient, trpc } from '@/lib/trpc';
-import { usePilotQueue } from '@/store/pilot-queue';
 import { useWellness } from '@/store/wellness';
 
 function ConsentChoice({
@@ -65,6 +66,7 @@ export default function PilotConsentScreen() {
   const [error, setError] = useState('');
   const [identityReady, setIdentityReady] = useState<boolean | null>(null);
   const [researchWithdrawn, setResearchWithdrawn] = useState(false);
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     void getPilotIdentity().then(async (identity) => {
@@ -88,6 +90,7 @@ export default function PilotConsentScreen() {
 
   const saveConsent = async () => {
     setError('');
+    setSaving(true);
     try {
       const identity = await getPilotIdentity();
       if (!identity) {
@@ -95,26 +98,33 @@ export default function PilotConsentScreen() {
         setError('This device no longer has a pilot access key. Return to enrollment to continue.');
         return;
       }
-      await recordServerConsent.mutateAsync({
-        participantId: identity.participantId,
-        participantToken: identity.participantToken,
-        privacyNoticeVersion: PRIVACY_NOTICE_VERSION,
-        consentDocumentVersion: PILOT_CONSENT_VERSION,
-        termsAccepted: true,
-        researchConsent: research,
-        healthDataConsent: research && health,
-        marketingConsent: MARKETING_CONSENT_ENABLED && marketing,
-      });
-      recordLocalConsent({
-        researchConsent: research,
-        healthDataConsent: research && health,
-        marketingConsent: MARKETING_CONSENT_ENABLED && marketing,
-      });
-      if (!research) usePilotQueue.getState().clear();
-      if (onboardingComplete) router.back();
+      if (!research) {
+        await requestResearchOptOut(identity, MARKETING_CONSENT_ENABLED && marketing);
+      } else {
+        await recordServerConsent.mutateAsync({
+          participantId: identity.participantId,
+          participantToken: identity.participantToken,
+          privacyNoticeVersion: PRIVACY_NOTICE_VERSION,
+          consentDocumentVersion: PILOT_CONSENT_VERSION,
+          termsAccepted: true,
+          researchConsent: true,
+          healthDataConsent: health,
+          marketingConsent: MARKETING_CONSENT_ENABLED && marketing,
+        });
+        recordLocalConsent({
+          researchConsent: true,
+          healthDataConsent: health,
+          marketingConsent: MARKETING_CONSENT_ENABLED && marketing,
+        });
+      }
+      if (onboardingComplete) goBackOrReplace('/(tabs)/you');
       else router.replace({ pathname: '/onboarding', params: { step: '1' } });
     } catch {
-      setError('Your choices could not be recorded securely. Nothing has been uploaded; please try again when you are online.');
+      setError(research
+        ? 'Research could not be enabled securely. Nothing has been uploaded; please try again when you are online.'
+        : 'Your stop request could not be saved securely on this device. Research remains disabled; please try again.');
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -143,7 +153,7 @@ export default function PilotConsentScreen() {
 
       {!LEGAL_DOCUMENTS_APPROVED && <View accessibilityRole="alert" style={{ marginTop: 12, borderRadius: 16, backgroundColor: '#F8E8D7', padding: 13 }}><Body size={10.5} color={MS.color.inkSoft}>Production consent is locked until the final controller, contact, retention and research wording is approved. Development builds can continue for flow testing.</Body></View>}
       {identityReady === false && <PillButton label="Return to enrollment" onPress={() => router.replace('/onboarding')} color={MS.color.surface} textColor={MS.color.forest} style={{ marginTop: 18 }} />}
-      <PillButton label={recordServerConsent.isPending ? 'Recording securely…' : onboardingComplete ? 'Save my choices' : 'Continue to meet Bramble'} onPress={saveConsent} disabled={!care || researchNeedsHealthConsent || recordServerConsent.isPending || identityReady === false || (!__DEV__ && !LEGAL_DOCUMENTS_APPROVED)} style={{ marginTop: identityReady === false ? 10 : 22 }} />
+      <PillButton label={saving ? 'Recording securely…' : onboardingComplete ? 'Save my choices' : 'Continue to meet Bramble'} onPress={saveConsent} disabled={!care || researchNeedsHealthConsent || saving || identityReady === false || (!__DEV__ && !LEGAL_DOCUMENTS_APPROVED)} style={{ marginTop: identityReady === false ? 10 : 22 }} />
       <View style={{ flexDirection: 'row', justifyContent: 'center', gap: 18, marginTop: 14 }}>
         <Pressable onPress={() => router.push({ pathname: '/privacy', params: { notice: '1' } })} accessibilityRole="link"><BodyBold size={10.5} color={MS.color.forest}>Privacy summary</BodyBold></Pressable>
         <Pressable onPress={() => router.push('/legal')} accessibilityRole="link"><BodyBold size={10.5} color={MS.color.forest}>Legal documents</BodyBold></Pressable>

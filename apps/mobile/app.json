@@ -8,7 +8,7 @@
     "scheme": "mindshed",
     "userInterfaceStyle": "automatic",
     "ios": {
-      "icon": "./assets/expo.icon",
+      "icon": "./assets/images/icon.png",
       "bundleIdentifier": "com.mindshed.app"
     },
     "android": {
@@ -17,9 +17,8 @@
         "android.permission.health.READ_SLEEP"
       ],
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
+        "backgroundColor": "#FFF9DA",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
-        "backgroundImage": "./assets/images/android-icon-background.png",
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
       "predictiveBackGestureEnabled": false,
@@ -35,14 +34,20 @@
         "expo-splash-screen",
         {
           "backgroundColor": "#FFF9DA",
-          "android": {
-            "image": "./assets/images/splash-icon.png",
-            "imageWidth": 76
-          }
+          "image": "./assets/images/splash-icon.png",
+          "imageWidth": 180,
+          "resizeMode": "contain"
         }
       ],
       "expo-sharing",
-      "expo-notifications",
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/images/notification-icon.png",
+          "color": "#315B45",
+          "defaultChannel": "gentle-reminders"
+        }
+      ],
       "expo-secure-store",
       [
         "expo-sqlite",
@@ -61,6 +66,7 @@
       ],
       "expo-health-connect",
       "./plugins/with-health-connect-main-activity",
+      "./plugins/with-android-private-data",
       [
         "expo-build-properties",
         {

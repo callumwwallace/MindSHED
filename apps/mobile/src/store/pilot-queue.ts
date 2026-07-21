@@ -9,11 +9,12 @@ import Constants from 'expo-constants';
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 
-import { localPrivateStorage } from '@/lib/local-private-storage';
+import { flushLocalPrivateStorageWrites, localPrivateStorage } from '@/lib/local-private-storage';
+import { getPendingPilotAction } from '@/lib/pilot-governance-storage';
 import { getPilotIdentity } from '@/lib/pilot-identity';
 import { apiClient } from '@/lib/trpc';
 import { compareVersions } from '@/lib/app-version';
-import { isPermanentPilotError, relativePilotDay } from '@/lib/pilot-policy';
+import { coalescePilotEvents, isPermanentPilotError, relativePilotDay } from '@/lib/pilot-policy';
 import { useWellness, type Checkin, type WellbeingPulse } from '@/store/wellness';
 
 interface PilotQueueState {
@@ -38,8 +39,7 @@ export const usePilotQueue = create<PilotQueueState>()(
       blockedReason: undefined,
       droppedEvents: 0,
       enqueue: (event) => {
-        if (get().events.some((queued) => queued.eventId === event.eventId)) return;
-        const next = [...get().events, event];
+        const next = coalescePilotEvents(get().events, event);
         const overflow = Math.max(0, next.length - 500);
         set({
           events: next.slice(-500),
@@ -140,6 +140,20 @@ export function schedulePilotFlush(delay = 5_000 + Math.floor(Math.random() * 25
   }, delay);
 }
 
+function cancelScheduledPilotFlush(): void {
+  if (!flushTimer) return;
+  clearTimeout(flushTimer);
+  flushTimer = undefined;
+}
+
+export async function clearPilotQueueDurably(): Promise<void> {
+  cancelScheduledPilotFlush();
+  usePilotQueue.getState().clear();
+  await flushLocalPrivateStorageWrites();
+  await usePilotQueue.persist.clearStorage();
+  await flushLocalPrivateStorageWrites();
+}
+
 export async function retryPilotEventsNow(): Promise<void> {
   if (flushTimer) {
     clearTimeout(flushTimer);
@@ -153,6 +167,7 @@ export async function retryPilotEventsNow(): Promise<void> {
 export async function flushPilotEvents(): Promise<void> {
   if (flushPromise) return flushPromise;
   flushPromise = (async () => {
+    if (await getPendingPilotAction()) return;
     const identity = await getPilotIdentity();
     const consent = useWellness.getState();
     if (!identity || !consent.researchConsent || !consent.healthDataConsent) return;
@@ -175,6 +190,7 @@ export async function flushPilotEvents(): Promise<void> {
       await apiClient.pilot.ingest.mutate({
         participantId: identity.participantId,
         participantToken: identity.participantToken,
+        appVersion,
         events,
       });
       usePilotQueue.getState().acknowledge(events.map((event) => event.eventId));

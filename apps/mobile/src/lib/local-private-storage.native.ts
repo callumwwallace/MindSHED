@@ -11,21 +11,35 @@ function toHex(bytes: Uint8Array): string {
   return Array.from(bytes, (byte) => byte.toString(16).padStart(2, '0')).join('');
 }
 
-async function databaseKey(): Promise<string> {
+async function databaseKey(): Promise<{ key: string; created: boolean }> {
   const existing = await SecureStore.getItemAsync(DATABASE_KEY_NAME);
-  if (existing) return existing;
+  if (existing) return { key: existing, created: false };
 
   const generated = toHex(await Crypto.getRandomBytesAsync(32));
   await SecureStore.setItemAsync(DATABASE_KEY_NAME, generated, {
     keychainAccessible: SecureStore.WHEN_UNLOCKED_THIS_DEVICE_ONLY,
   });
-  return generated;
+  return { key: generated, created: true };
 }
 
 let databasePromise: ReturnType<typeof openPrivateDatabase> | undefined;
+const pendingWrites = new Set<Promise<void>>();
+
+function trackWrite(write: Promise<void>): Promise<void> {
+  pendingWrites.add(write);
+  void write.then(
+    () => pendingWrites.delete(write),
+    () => pendingWrites.delete(write),
+  );
+  return write;
+}
 
 async function openPrivateDatabase() {
-  const key = await databaseKey();
+  const { key, created } = await databaseKey();
+  // The SQLCipher key is device-bound and intentionally excluded from restore.
+  // If an OS restore supplies only the encrypted file, it is unreadable by
+  // design; reset that file so hydration cannot strand the app on a blank shell.
+  if (created) await SQLite.deleteDatabaseAsync(DATABASE_NAME).catch(() => undefined);
   const database = await SQLite.openDatabaseAsync(DATABASE_NAME);
 
   // SQLCipher requires the key before any other operation on the database.
@@ -70,19 +84,27 @@ export const localPrivateStorage: StateStorage<Promise<void>> = {
     return legacyValue;
   },
 
-  async setItem(name, value) {
-    const database = await privateDatabase();
-    await database.runAsync(
-      'INSERT INTO private_key_value (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value',
-      name,
-      value,
-    );
-    await AsyncStorage.removeItem(name);
+  setItem(name, value) {
+    return trackWrite((async () => {
+      const database = await privateDatabase();
+      await database.runAsync(
+        'INSERT INTO private_key_value (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value',
+        name,
+        value,
+      );
+      await AsyncStorage.removeItem(name);
+    })());
   },
 
-  async removeItem(name) {
-    const database = await privateDatabase();
-    await database.runAsync('DELETE FROM private_key_value WHERE key = ?', name);
-    await AsyncStorage.removeItem(name);
+  removeItem(name) {
+    return trackWrite((async () => {
+      const database = await privateDatabase();
+      await database.runAsync('DELETE FROM private_key_value WHERE key = ?', name);
+      await AsyncStorage.removeItem(name);
+    })());
   },
 };
+
+export async function flushLocalPrivateStorageWrites(): Promise<void> {
+  while (pendingWrites.size) await Promise.all([...pendingWrites]);
+}

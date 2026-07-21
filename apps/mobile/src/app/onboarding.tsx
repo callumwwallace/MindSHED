@@ -11,6 +11,7 @@ import { Body, BodyBold, CharacterText, Display, Heading } from '@/components/ms
 import { MS } from '@/constants/mindshed';
 import { configureDailyNudge } from '@/lib/daily-nudge';
 import { LEGAL_DOCUMENTS_APPROVED } from '@/lib/legal-readiness';
+import { goBackOrReplace } from '@/lib/navigation';
 import { getPilotIdentity, setPilotIdentity } from '@/lib/pilot-identity';
 import { trpc } from '@/lib/trpc';
 import { useWellness } from '@/store/wellness';
@@ -65,19 +66,15 @@ export default function OnboardingScreen() {
         deletionSecret: enrolled.deletionSecret,
         enrolledAt: new Date().toISOString(),
       });
-      router.push('/pilot-consent');
+      // Replace the enrolment route so it cannot remain underneath the main
+      // tabs after first-time consent and be exposed by an iOS dismiss gesture.
+      router.replace('/pilot-consent');
     } catch (caught) {
       const message = caught instanceof Error ? caught.message.toLowerCase() : '';
       setError(
-        message.includes('cohort is full')
-          ? 'This pilot cohort has reached its approved capacity. Your university pilot contact can advise on next steps.'
-          : message.includes('not active')
-            ? 'That pilot code is not active. It may not have started yet or may have expired.'
-            : message.includes('enrolment is unavailable')
-              ? 'Pilot enrolment is temporarily paused. No information was submitted.'
-              : message.includes('invalid pilot access code')
-                ? 'That code is not recognised. Check the letters or ask your pilot contact for a new code.'
-                : 'We could not verify that code. Check your connection and try again; no information was submitted.',
+        message.includes('enrolment is unavailable')
+          ? 'Pilot enrolment is temporarily paused. No information was submitted.'
+          : 'We could not verify that code. Check the code and your connection, then try again; no information was submitted.',
       );
     }
   };
@@ -85,7 +82,7 @@ export default function OnboardingScreen() {
   return (
     <ScrollView style={{ flex: 1, backgroundColor: step === 1 ? MS.color.skyPale : MS.color.cream }} contentContainerStyle={{ paddingTop: insets.top + 14, paddingHorizontal: 20, paddingBottom: insets.bottom + 30, flexGrow: 1 }} keyboardShouldPersistTaps="handled">
       <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-        {step || onboardingComplete ? <Pressable onPress={() => step ? setStep(step - 1) : router.back()} accessibilityRole="button" accessibilityLabel={step ? 'Previous onboarding step' : 'Close onboarding'} style={{ width: 44, height: 44, borderRadius: 22, backgroundColor: 'rgba(255,254,247,0.82)', alignItems: 'center', justifyContent: 'center' }}><Feather name={step ? 'arrow-left' : 'x'} size={18} color={MS.color.forest} /></Pressable> : <View style={{ width: 44 }} />}
+        {step || onboardingComplete ? <Pressable onPress={() => step ? setStep(step - 1) : goBackOrReplace('/')} accessibilityRole="button" accessibilityLabel={step ? 'Previous onboarding step' : 'Close onboarding'} style={{ width: 44, height: 44, borderRadius: 22, backgroundColor: 'rgba(255,254,247,0.82)', alignItems: 'center', justifyContent: 'center' }}><Feather name={step ? 'arrow-left' : 'x'} size={18} color={MS.color.forest} /></Pressable> : <View style={{ width: 44 }} />}
         <StepDots step={step} />
         <View style={{ width: 44 }} />
       </View>
@@ -149,7 +146,11 @@ export default function OnboardingScreen() {
           <View style={{ width: 88, height: 88, borderRadius: 44, backgroundColor: MS.color.sageSoft, alignItems: 'center', justifyContent: 'center' }}><Feather name="sun" size={34} color={MS.color.forest} /></View>
           <Display size={30} color={MS.color.inkSoft} style={{ marginTop: 24, textAlign: 'center' }}>We’ll grow it together.</Display>
           <Body size={12.5} color={MS.color.muted} style={{ textAlign: 'center', marginTop: 8, maxWidth: 310 }}>The garden starts quiet on purpose. A check-in gives today somewhere to land.</Body>
-          <PillButton label={onboardingComplete ? 'Return to the garden' : 'Enter the garden'} onPress={() => { completeOnboarding(); router.replace('/'); }} style={{ alignSelf: 'stretch', marginTop: 30 }} />
+          <PillButton label={onboardingComplete ? 'Return to the garden' : 'Enter the garden'} onPress={() => {
+            completeOnboarding();
+            if (onboardingComplete) goBackOrReplace('/');
+            else router.replace('/');
+          }} style={{ alignSelf: 'stretch', marginTop: 30 }} />
           <Body size={10} color={MS.color.faint} style={{ textAlign: 'center', marginTop: 13 }}>Your preferences stay on this device. This pilot does not ask you to create an identity account.</Body>
         </View>
       )}

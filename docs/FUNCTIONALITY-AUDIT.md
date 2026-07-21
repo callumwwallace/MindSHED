@@ -1,6 +1,6 @@
 # MindSHED UI and functionality audit
 
-Snapshot: 16 July 2026
+Snapshot: 21 July 2026
 
 ## Executive view
 
@@ -22,7 +22,7 @@ are also outstanding.
 | Area | Current behaviour | Assessment |
 | --- | --- | --- |
 | Entry | Server-backed non-personal pilot code, resumable enrolment, pre-consent notice, granular app/research choices and Bramble introduction | Implemented; production enrolment fails closed until approved document flags are enabled |
-| Home | Full-screen garden, named habitat progress, compact check-in dock, expandable quiet plan, roaming/pettable Bramble and timed dialogue | Shed perspective, interaction discovery, growth communication and permanent speech-bubble issues corrected; SVG remains the fallback for the final Rive character |
+| Home | Full-screen garden, named habitat progress, compact check-in dock, expandable quiet plan, roaming/pettable Bramble and timed dialogue | Implemented with the repository-native SVG animation; no external animation runtime is required for the pilot |
 | Daily loop | Four-step check-in, low-mood support signposting, rule-based care suggestion, editable daily plan and next-day reset | Implemented locally; structured allowlisted research event queues only after research consent |
 | Places | Breathing, journal, grounding, activities and urgent support | Implemented; simulated sound player removed and direct old links show an honest unavailable state |
 | Insights | One guided wellbeing picture: today's check-in, due fortnightly SWEMWBS check, mood/energy/pressure together, cautious observations, phone-health context and history | Implemented locally; no hidden composite score; SWEMWBS feedback and research upload remain independently approval-gated |
@@ -41,7 +41,8 @@ are also outstanding.
   The app explains that network infrastructure necessarily handles connection
   metadata even though the application does not add it to research records.
 - Research upload is optional. Turning it off clears queued research events;
-  withdrawal and participant-data deletion are real server operations.
+  withdrawal and deletion stop locally while offline and retain only the
+  minimum encrypted server instruction needed to confirm the action later.
 - Local deletion clears consent state, profile, settings, wellbeing content,
   cached phone-health summaries, notification schedules, encrypted queue and
   pilot credentials.
@@ -101,19 +102,26 @@ are also outstanding.
   permission recovery, refresh, disconnect and deletion controls.
 - Reworked legal/privacy copy so it matches the code and blocks production
   consent while the supplied legal documents remain unapproved.
+- Added strict notification deep-link routing, partial/revoked Health Connect
+  handling, app-switcher privacy cover, Android backup exclusion and a native-
+  only browser boundary.
+- Added production mobile/API configuration validation, database TLS,
+  readiness checks, security headers, bounded participant histories and
+  participant-serialized/idempotent lifecycle operations.
 
 ## Evidence completed
 
-- Workspace TypeScript, mobile lint, mobile policy/lifecycle tests and API
-  contract tests pass through `npm run verify`.
+- Workspace TypeScript, mobile lint, 23 mobile policy/lifecycle tests and 15 API
+  unit/contract tests pass.
 - Disposable-PostgreSQL enrolment, consent, ingestion, withdrawal, deletion,
   HTTP-boundary and retention lifecycle tests have passed locally.
 - iOS native development build succeeds with HealthKit linked and the key
   participant screens have been visually reviewed in an iPhone simulator.
-- iOS and Android production JavaScript/Hermes exports succeed.
+- iOS, Android and static web production exports succeed with release
+  configuration guards enabled; web renders only the native-app availability
+  boundary and does not initialize private or pilot services.
 - Android native debug APK compiles across arm64-v8a, armeabi-v7a, x86 and
-  x86_64 with SQLCipher, Health Connect, notifications, KeepAwake and Rive
-  linked.
+  x86_64 with SQLCipher, Health Connect, notifications and KeepAwake linked.
 
 ## Remaining go/no-go gates
 
@@ -126,8 +134,8 @@ are also outstanding.
    backup-restore, outage, withdrawal and deletion drills.
 4. Complete physical iOS and Android testing for VoiceOver/TalkBack, large text,
    keyboards, permissions, notifications, offline recovery and upgrade paths.
-5. Supply and review a production `.riv` file built to `docs/BRAMBLE-RIG.md`.
-   The current SVG remains the safe fallback until authored animation exists.
+5. Obtain visual-owner approval for the new Bramble-derived app icon/splash and
+   supply final store screenshots/metadata.
 6. Complete physical-device permission, revocation, partial-access and real-data
    QA for HealthKit and Health Connect, and reconcile both store health-data
    declarations with the final policy and DPIA.

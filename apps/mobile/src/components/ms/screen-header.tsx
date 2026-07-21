@@ -1,8 +1,9 @@
 import Feather from '@expo/vector-icons/Feather';
-import { router } from 'expo-router';
+import type { Href } from 'expo-router';
 import { Pressable, View } from 'react-native';
 
 import { MS } from '@/constants/mindshed';
+import { goBackOrReplace } from '@/lib/navigation';
 import { Body, BodyBold, Heading } from './text';
 
 export function ScreenHeader({
@@ -10,17 +11,19 @@ export function ScreenHeader({
   title,
   description,
   close = false,
+  fallback = '/',
 }: {
   eyebrow?: string;
   title: string;
   description?: string;
   close?: boolean;
+  fallback?: Href;
 }) {
   return (
     <View>
       <View style={{ flexDirection: 'row', alignItems: 'center' }}>
         <Pressable
-          onPress={() => router.back()}
+          onPress={() => goBackOrReplace(fallback)}
           accessibilityRole="button"
           accessibilityLabel={close ? 'Close' : 'Go back'}
           hitSlop={6}
@@ -46,4 +49,3 @@ export function ScreenHeader({
     </View>
   );
 }
-

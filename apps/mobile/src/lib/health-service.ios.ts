@@ -39,7 +39,7 @@ export async function readHealthDailySummaries(dayCount = 21): Promise<HealthDai
   rangeStart.setHours(0, 0, 0, 0);
   const rangeEnd = new Date(days[days.length - 1].date);
   rangeEnd.setHours(23, 59, 59, 999);
-  const [stepBuckets, sleepSamples] = await Promise.all([
+  const [stepsResult, sleepResult] = await Promise.allSettled([
     kit.queryStatisticsCollectionForQuantity(
       STEP_TYPE,
       ['cumulativeSum'],
@@ -53,6 +53,9 @@ export async function readHealthDailySummaries(dayCount = 21): Promise<HealthDai
       filter: { date: { startDate: rangeStart, endDate: rangeEnd } },
     }),
   ]);
+  const stepBuckets = stepsResult.status === 'fulfilled' ? stepsResult.value : [];
+  const sleepSamples = sleepResult.status === 'fulfilled' ? sleepResult.value : [];
+  if (stepsResult.status === 'rejected' && sleepResult.status === 'rejected') throw stepsResult.reason;
   const stepsByDate = new Map<string, number>();
   for (const bucket of stepBuckets) {
     if (bucket.startDate && bucket.sumQuantity) {

@@ -1,10 +1,10 @@
 # MindSHED pilot production-readiness plan
 
-Status: implementation underway; not approved for participant data  
-Prepared: 16 July 2026  
-Scope: iOS and Android university pilot, with web secondary
+Status: engineering candidate; external release gates remain open
+Prepared: 21 July 2026
+Scope: native iOS and Android university pilot; web is explicitly excluded
 
-## Implementation checkpoint — 16 July 2026
+## Implementation checkpoint — 21 July 2026
 
 The first privacy/security tranche is now implemented in the repository:
 
@@ -58,7 +58,7 @@ The first privacy/security tranche is now implemented in the repository:
   the API contract rejects raw and derived phone-health data;
 - Android API 36 tooling is installed locally and both a four-architecture debug
   APK and a production-mode arm64 app bundle compile successfully with SQLCipher,
-  Rive, release JavaScript bundling and lint-vital checks.
+  release JavaScript bundling and lint-vital checks.
 - the daily nudge now uses native on-device notification permission and
   scheduling without a push token, while fake sound, health, account and inbox
   experiences are excluded or replaced with honest unavailable states;
@@ -224,7 +224,6 @@ Only include a field if the protocol/statistical analysis plan needs it.
 | Time | relative study day/week | No exact local or UTC timestamps in research extract |
 | Check-in | mood, energy, stress, selected needs | Structured values only; no notes |
 | Pulse | approved question IDs and numeric answers | Explicitly consented special-category data |
-| Engagement | bucketed counts of completed check-ins, breathing and grounding sessions | No navigation trail or exact event time |
 | Technical quality | coarse platform, app version, schema version | No device model when small-cell risk is material |
 | Consent | approved document version, choices, recorded/withdrawn time | Store with pseudonymous record and audit controls |
 
@@ -429,11 +428,12 @@ Requirements for every write endpoint:
 ### 7.4 Complete expected mobile functionality
 
 - real local notifications with permission and recovery states;
-- real soundscape audio with interruptions, background policy and offline
-  availability;
+- keep soundscapes truthfully excluded until licensed audio, interruption and
+  offline behaviour are separately approved and implemented;
 - complete physical-device and licensed-presentation QA for SWEMWBS
   save/resume/history and official scoring;
-- production Rive asset/state machine for Bramble;
+- final approved app icon, splash assets and store artwork; Bramble itself uses
+  the repository-native SVG animation for this pilot;
 - final legal/support/about content;
 - keep HealthKit/Health Connect optional and local-only unless a future protocol,
   legal basis, DPIA, ethics amendment and API schema explicitly approve a

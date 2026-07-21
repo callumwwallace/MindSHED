@@ -1,6 +1,6 @@
 # MindSHED pilot screen and state matrix
 
-Updated: 16 July 2026
+Updated: 21 July 2026
 
 Legend: **ready** is implemented and internally verified; **device QA** needs
 physical iOS/Android evidence; **approval gate** deliberately remains disabled;
@@ -24,7 +24,7 @@ physical iOS/Android evidence; **approval gate** deliberately remains disabled;
 | --- | --- |
 | Home before/after check-in; compact/expanded quiet plan; full garden | Ready |
 | Named garden milestones, specific unlock state, next milestone and garden journal | Ready |
-| Bramble idle, wander, react, celebrate, sleepy and reduced motion | Ready with SVG fallback; production Rive is an external art gate |
+| Bramble idle, wander, react, celebrate, sleepy and reduced motion | Ready with the repository-native SVG implementation; Rive is not required for the pilot |
 | Attached Bramble speech on left/right edges; reveal, hold, fade and ambient cooldown | Ready |
 | Check-in mood, capacity, note/needs, low-mood support and care result | Ready |
 | Daily plan empty, suggested, custom, done, undo and next-day reset | Ready |
@@ -69,6 +69,7 @@ physical iOS/Android evidence; **approval gate** deliberately remains disabled;
 | Remote notifications inbox | Excluded; old links explain there is no remote inbox |
 | Connected health | Optional local-only steps/sleep context; physical-device QA and store declarations remain |
 | Marketing | Approval gate; hidden and default-off |
+| Browser/web use | Excluded; web shows a native-app notice and initializes no private storage, health or pilot network service |
 
 ## Release evidence still required
 

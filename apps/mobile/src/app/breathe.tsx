@@ -1,5 +1,4 @@
 import Feather from '@expo/vector-icons/Feather';
-import { router } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import { Animated, Easing, Pressable, StyleSheet, useWindowDimensions, View } from 'react-native';
 import * as KeepAwake from 'expo-keep-awake';
@@ -14,6 +13,7 @@ import { Body, BodyBold, Display, Heading } from '@/components/ms/text';
 import { MS } from '@/constants/mindshed';
 import { useReducedMotion } from '@/hooks/use-reduced-motion';
 import { getGardenRestState } from '@/lib/garden-progress';
+import { goBackOrReplace } from '@/lib/navigation';
 import { useWellness } from '@/store/wellness';
 
 const PHASE_MS = 4000;
@@ -102,7 +102,7 @@ export default function BreatheScreen() {
     <View style={{ flex: 1, backgroundColor: '#283A55' }}>
       <View pointerEvents="none" style={StyleSheet.absoluteFill}><Garden growth={gardenGrowth} mode="quiet" restState={gardenRest.id} timeOfDay="dusk" /></View>
       <View pointerEvents="none" style={[StyleSheet.absoluteFill, { backgroundColor: 'rgba(23,39,49,0.48)' }]} />
-      {stage !== 'active' && <Pressable onPress={() => router.back()} accessibilityRole="button" accessibilityLabel="Close" style={{ position: 'absolute', top: insets.top + 12, left: 18, zIndex: 10, width: 44, height: 44, borderRadius: 22, backgroundColor: 'rgba(255,254,247,0.22)', borderWidth: 1, borderColor: 'rgba(255,254,247,0.18)', alignItems: 'center', justifyContent: 'center' }}><Feather name="x" size={18} color={MS.color.surface} /></Pressable>}
+      {stage !== 'active' && <Pressable onPress={() => goBackOrReplace('/')} accessibilityRole="button" accessibilityLabel="Close" style={{ position: 'absolute', top: insets.top + 12, left: 18, zIndex: 10, width: 44, height: 44, borderRadius: 22, backgroundColor: 'rgba(255,254,247,0.22)', borderWidth: 1, borderColor: 'rgba(255,254,247,0.18)', alignItems: 'center', justifyContent: 'center' }}><Feather name="x" size={18} color={MS.color.surface} /></Pressable>}
 
       {stage === 'setup' && <View style={{ flex: 1, paddingTop: insets.top + (compact ? 68 : 88), paddingHorizontal: 22, paddingBottom: insets.bottom + (compact ? 18 : 26) }}>
         <BodyBold size={10} color="rgba(255,254,247,0.66)" style={{ letterSpacing: 1.4 }}>THE BENCH</BodyBold>
@@ -127,9 +127,9 @@ export default function BreatheScreen() {
         <Pressable onPress={() => setConfirmExit(true)} accessibilityRole="button" accessibilityLabel="End breathing session" style={{ position: 'absolute', top: insets.top + 12, left: 18, zIndex: 10, width: 44, height: 44, borderRadius: 22, backgroundColor: 'rgba(255,254,247,0.22)', borderWidth: 1, borderColor: 'rgba(255,254,247,0.18)', alignItems: 'center', justifyContent: 'center' }}><Feather name="x" size={18} color={MS.color.surface} /></Pressable>
       </>}
 
-      {stage === 'complete' && <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 26, paddingBottom: compact ? 12 : 30 }}><AnimatedBramble size={compact ? 120 : 156} mood="happy" state="celebrate" /><BodyBold size={10} color="rgba(255,254,247,0.66)" style={{ letterSpacing: 1.4, marginTop: compact ? 14 : 24 }}>SESSION COMPLETE</BodyBold><Display size={compact ? 26 : 29} color={MS.color.surface} style={{ textAlign: 'center', marginTop: 6 }}>You made a little room.</Display><Body size={12} color="rgba(255,254,247,0.68)" style={{ textAlign: 'center', marginTop: 8 }}>No score. No streak. Just a quieter moment you chose for yourself.</Body><PillButton label="Return to the garden" onPress={() => router.back()} color={MS.color.surface} style={{ alignSelf: 'stretch', marginTop: compact ? 18 : 28 }} /></View>}
+      {stage === 'complete' && <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 26, paddingBottom: compact ? 12 : 30 }}><AnimatedBramble size={compact ? 120 : 156} mood="happy" state="celebrate" /><BodyBold size={10} color="rgba(255,254,247,0.66)" style={{ letterSpacing: 1.4, marginTop: compact ? 14 : 24 }}>SESSION COMPLETE</BodyBold><Display size={compact ? 26 : 29} color={MS.color.surface} style={{ textAlign: 'center', marginTop: 6 }}>You made a little room.</Display><Body size={12} color="rgba(255,254,247,0.68)" style={{ textAlign: 'center', marginTop: 8 }}>No score. No streak. Just a quieter moment you chose for yourself.</Body><PillButton label="Return to the garden" onPress={() => goBackOrReplace('/')} color={MS.color.surface} style={{ alignSelf: 'stretch', marginTop: compact ? 18 : 28 }} /></View>}
 
-      {confirmExit && <View style={[StyleSheet.absoluteFill, { zIndex: 5, backgroundColor: 'rgba(20,31,43,0.68)', justifyContent: 'flex-end' }]} accessibilityViewIsModal><View style={{ backgroundColor: MS.color.cream, borderTopLeftRadius: 28, borderTopRightRadius: 28, padding: 22, paddingBottom: insets.bottom + 20 }}><Heading size={20} color={MS.color.inkSoft}>Leave this session?</Heading><Body size={12} color={MS.color.muted} style={{ marginTop: 5 }}>Nothing is lost, and there is no incomplete mark.</Body><PillButton label="Keep breathing" onPress={() => setConfirmExit(false)} style={{ marginTop: 18 }} /><Pressable onPress={() => router.back()} accessibilityRole="button" accessibilityLabel="End breathing session" style={{ alignItems: 'center', padding: 14 }}><BodyBold size={11.5} color={MS.color.forestMuted}>End session</BodyBold></Pressable></View></View>}
+      {confirmExit && <View style={[StyleSheet.absoluteFill, { zIndex: 5, backgroundColor: 'rgba(20,31,43,0.68)', justifyContent: 'flex-end' }]} accessibilityViewIsModal><View style={{ backgroundColor: MS.color.cream, borderTopLeftRadius: 28, borderTopRightRadius: 28, padding: 22, paddingBottom: insets.bottom + 20 }}><Heading size={20} color={MS.color.inkSoft}>Leave this session?</Heading><Body size={12} color={MS.color.muted} style={{ marginTop: 5 }}>Nothing is lost, and there is no incomplete mark.</Body><PillButton label="Keep breathing" onPress={() => setConfirmExit(false)} style={{ marginTop: 18 }} /><Pressable onPress={() => goBackOrReplace('/')} accessibilityRole="button" accessibilityLabel="End breathing session" style={{ alignItems: 'center', padding: 14 }}><BodyBold size={11.5} color={MS.color.forestMuted}>End session</BodyBold></Pressable></View></View>}
     </View>
   );
 }

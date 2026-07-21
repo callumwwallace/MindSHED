@@ -12,8 +12,8 @@ database key and pseudonymous pilot credentials held in Keychain/Keystore.
 3. Use `npm run sim` from the root for iOS, or `npm run android --workspace
    mobile` for Android.
 
-Rive, SQLCipher, HealthKit and Health Connect require a native development
-build; Expo Go is not a valid security, animation or health-permission test
+SQLCipher, HealthKit and Health Connect require a native development build;
+Expo Go is not a valid security or health-permission test
 environment. Rebuild the development client after changing native plugins or
 permissions. `EXPO_PUBLIC_LOCAL_PILOT_CODE` is an optional local-only helper and
 must not be configured in preview or production.
@@ -40,9 +40,10 @@ npx --yes expo-doctor@1.20.1 apps/mobile
 ```
 
 The native generated projects are intentionally ignored and recreated by Expo
-prebuild/EAS. Production builds must set `EXPO_PUBLIC_API_URL` in the EAS
-production environment. Without it, a release fails closed against a reserved
-invalid hostname instead of silently attempting to contact localhost.
+prebuild/EAS. Production builds must provide every release value listed in
+`.env.example`, including the HTTPS API/policy/support URLs, verified contacts,
+written legal-approval flag and organisation-owned EAS project. A production
+config fails immediately when any value is absent.
 
 Build profiles are defined in `eas.json`: development client, internal preview,
 and auto-incrementing store production.

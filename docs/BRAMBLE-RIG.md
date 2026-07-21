@@ -1,4 +1,9 @@
-# Bramble — production Rive specification
+# Bramble — optional post-pilot Rive specification
+
+Pilot decision (21 July 2026): the native SVG animation is the supported pilot
+implementation. The Rive dependency and empty runtime hook were removed. This
+document is retained only as a future art-direction option and is not a release
+gate.
 
 This is the production contract for the interactive 2D companion. The React
 Native SVG remains a fallback and design-development reference; it is not the

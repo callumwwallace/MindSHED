@@ -9,11 +9,14 @@ import { PillButton } from '@/components/ms/pill-button';
 import { ScreenHeader } from '@/components/ms/screen-header';
 import { Body, BodyBold, Heading } from '@/components/ms/text';
 import { MS } from '@/constants/mindshed';
+import { endPilotIdentityLocally, synchronizePendingPilotAction } from '@/lib/pilot-governance';
+import { pilotErrorCode } from '@/lib/pilot-governance-policy';
+import { getPendingPilotAction } from '@/lib/pilot-governance-storage';
 import { getPilotIdentity } from '@/lib/pilot-identity';
 import { apiClient, trpc } from '@/lib/trpc';
 import { retryPilotEventsNow, usePilotQueue } from '@/store/pilot-queue';
 
-type ConnectionState = 'loading' | 'not-enrolled' | 'connected' | 'offline';
+type ConnectionState = 'loading' | 'not-enrolled' | 'connected' | 'ended' | 'offline';
 
 export default function PilotStatusScreen() {
   const insets = useSafeAreaInsets();
@@ -30,10 +33,18 @@ export default function PilotStatusScreen() {
           participantToken: identity.participantToken,
         });
         return { connection: 'connected' as const, status };
-      } catch {
+      } catch (error) {
+        if (pilotErrorCode(error) === 'UNAUTHORIZED') {
+          await endPilotIdentityLocally();
+          return { connection: 'ended' as const, status: null };
+        }
         return { connection: 'offline' as const, status: null };
       }
     },
+  });
+  const pendingGovernance = useQuery({
+    queryKey: ['pending-pilot-governance'],
+    queryFn: getPendingPilotAction,
   });
   const queuedEvents = usePilotQueue((state) => state.events.length);
   const failureCount = usePilotQueue((state) => state.failureCount);
@@ -48,8 +59,14 @@ export default function PilotStatusScreen() {
     setSyncing(true);
     setSyncMessage('');
     try {
-      await retryPilotEventsNow();
-      setSyncMessage('Encrypted pilot queue is up to date.');
+      const governance = await synchronizePendingPilotAction();
+      if (governance.status === 'pending') {
+        setSyncMessage('Your stop or deletion instruction is still waiting for a secure connection. No research events can upload first.');
+      } else {
+        await retryPilotEventsNow();
+        setSyncMessage('Encrypted pilot queue is up to date.');
+      }
+      await pendingGovernance.refetch();
       await pilotConnection.refetch();
     } catch {
       setSyncMessage('Still offline. Your encrypted queue is safe and will retry later.');
@@ -71,19 +88,21 @@ export default function PilotStatusScreen() {
       <View style={{ marginTop: 24, borderRadius: MS.radius.xl, backgroundColor: connection === 'connected' ? MS.color.forest : MS.color.surface, padding: 18 }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
           <View style={{ width: 44, height: 44, borderRadius: 16, backgroundColor: connection === 'connected' ? 'rgba(255,254,247,0.15)' : MS.color.sageSoft, alignItems: 'center', justifyContent: 'center' }}>
-            <Feather name={connection === 'connected' ? 'shield' : connection === 'not-enrolled' ? 'minus-circle' : 'wifi-off'} size={19} color={connection === 'connected' ? MS.color.surface : MS.color.forest} />
+            <Feather name={connection === 'connected' ? 'shield' : connection === 'offline' ? 'wifi-off' : 'minus-circle'} size={19} color={connection === 'connected' ? MS.color.surface : MS.color.forest} />
           </View>
           <View style={{ flex: 1 }}>
             <BodyBold size={10} color={connection === 'connected' ? 'rgba(255,254,247,0.68)' : MS.color.forestMuted} style={{ letterSpacing: 1.2 }}>THIS DEVICE</BodyBold>
             <Heading size={17} color={connection === 'connected' ? MS.color.surface : MS.color.inkSoft} style={{ marginTop: 2 }}>
-              {connection === 'loading' ? 'Checking securely…' : connection === 'connected' ? 'Pseudonymous pilot link active' : connection === 'not-enrolled' ? 'Not enrolled' : 'Connection unavailable'}
+              {connection === 'loading' ? 'Checking securely…' : connection === 'connected' ? 'Pseudonymous pilot link active' : connection === 'ended' ? 'Previous pilot link ended' : connection === 'not-enrolled' ? 'Not enrolled' : 'Connection unavailable'}
             </Heading>
           </View>
         </View>
         <Body size={11} color={connection === 'connected' ? 'rgba(255,254,247,0.74)' : MS.color.muted} style={{ marginTop: 12 }}>
           {connection === 'connected'
             ? 'The server recognises a random participant number, not your name, email or student identity.'
-            : connection === 'not-enrolled'
+            : connection === 'ended'
+              ? 'The server no longer recognises this pseudonymous record. Its local credentials and research queue were removed; local wellbeing features still work.'
+              : connection === 'not-enrolled'
               ? 'No pilot access key is stored on this device. Local wellbeing features still work.'
               : 'Local features keep working. No queued content is discarded while the server is unavailable.'}
         </Body>
@@ -97,6 +116,7 @@ export default function PilotStatusScreen() {
         <Body size={11} color={MS.color.muted} style={{ marginTop: 5 }}>
           {queuedEvents === 0 ? 'Nothing is waiting to upload.' : `${queuedEvents} structured ${queuedEvents === 1 ? 'event is' : 'events are'} held in the encrypted queue.`}
         </Body>
+        {pendingGovernance.data && <View accessibilityRole="alert" style={{ marginTop: 10, borderRadius: 14, backgroundColor: MS.color.sageSoft, padding: 11 }}><Body size={10.5} color={MS.color.inkSoft}>A {pendingGovernance.data.kind === 'consent' ? 'research stop' : pendingGovernance.data.kind} instruction is pending. It always retries before research events, which remain blocked.</Body></View>}
         {!!blockedReason && <View accessibilityRole="alert" style={{ marginTop: 10, borderRadius: 14, backgroundColor: '#F8E8D7', padding: 11 }}><Body size={10.5} color={MS.color.inkSoft}>{blockedReason}</Body></View>}
         {droppedEvents > 0 && <Body accessibilityRole="alert" size={10} color={MS.color.danger} style={{ marginTop: 7 }}>{droppedEvents} older {droppedEvents === 1 ? 'event was' : 'events were'} not retained after the encrypted offline queue reached its safety limit.</Body>}
         {failureCount > 0 && !blockedReason && <Body size={10} color={MS.color.faint} style={{ marginTop: 5 }}>Automatic retry {retryLabel}. Attempt {failureCount}.</Body>}
@@ -122,8 +142,8 @@ export default function PilotStatusScreen() {
         )}
       </View>
 
-      {connection === 'not-enrolled' && <PillButton label="Enter a pilot code" onPress={() => router.push('/onboarding')} style={{ marginTop: 18 }} />}
-      <Pressable onPress={() => { setSyncMessage(''); void config.refetch(); void pilotConnection.refetch(); }} accessibilityRole="button" style={{ alignItems: 'center', padding: 16 }}><BodyBold size={11} color={MS.color.forest}>Refresh status</BodyBold></Pressable>
+      {(connection === 'not-enrolled' || connection === 'ended') && <PillButton label="Enter a pilot code" onPress={() => router.push('/onboarding')} style={{ marginTop: 18 }} />}
+      <Pressable onPress={() => { setSyncMessage(''); void config.refetch(); void pilotConnection.refetch(); void pendingGovernance.refetch(); }} accessibilityRole="button" style={{ alignItems: 'center', padding: 16 }}><BodyBold size={11} color={MS.color.forest}>Refresh status</BodyBold></Pressable>
     </ScrollView>
   );
 }

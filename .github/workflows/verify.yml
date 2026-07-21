@@ -18,17 +18,42 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
-      - uses: actions/checkout@v6
-      - uses: actions/setup-node@v5
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
         with:
-          node-version: 22
+          node-version-file: .nvmrc
           cache: npm
       - run: npm ci
       - run: npm run typecheck
       - run: npm run lint --workspace mobile
+      - run: npm run test --workspace mobile
       - run: npm run test --workspace @mindshed/api
+      - run: npm run build --workspace @mindshed/api
       - run: npx --yes expo-doctor@1.20.1 apps/mobile
       - run: npm audit --omit=dev --audit-level=high
+      - name: Bundle all mobile platforms with production guards
+        working-directory: apps/mobile
+        env:
+          MINDSHED_VALIDATE_PRODUCTION: "true"
+          EXPO_PUBLIC_API_URL: https://api.ci.invalid
+          EXPO_PUBLIC_LEGAL_DOCUMENTS_APPROVED: "true"
+          EXPO_PUBLIC_PRIVACY_POLICY_URL: https://support.ci.invalid/privacy
+          EXPO_PUBLIC_SUPPORT_URL: https://support.ci.invalid
+          EXPO_PUBLIC_SUPPORT_EMAIL: support@ci.invalid
+          EXPO_PUBLIC_PRIVACY_EMAIL: privacy@ci.invalid
+          EXPO_PUBLIC_RESEARCH_EMAIL: research@ci.invalid
+          EXPO_PUBLIC_DATA_CONTROLLER_NAME: CI controller
+          EXPO_PUBLIC_DATA_CONTROLLER_ADDRESS: CI address
+          EXPO_PUBLIC_ICO_REGISTRATION: CI-TEST
+          EAS_PROJECT_ID: 00000000-0000-4000-8000-000000000000
+          EAS_OWNER: ci-owner
+        run: |
+          node -e "const b=require('node:fs').readFileSync('assets/images/icon.png'); if(b.readUInt32BE(16)!==1024||b.readUInt32BE(20)!==1024||b[25]!==2) process.exit(1)"
+          npx expo config --type introspect --json > /tmp/mindshed-introspect.json
+          node -e "const c=require('/tmp/mindshed-introspect.json'); const m=c._internal.modResults.android.manifest.manifest; const a=m.application[0].$; const removed=new Set(m['uses-permission'].filter(p=>p.$['tools:node']==='remove').map(p=>p.$['android:name'])); if(a['android:allowBackup']!=='false'||a['android:fullBackupContent']!=='false'||a['android:usesCleartextTraffic']!=='false'||!removed.has('android.permission.READ_EXTERNAL_STORAGE')||!removed.has('android.permission.WRITE_EXTERNAL_STORAGE')||!removed.has('android.permission.SYSTEM_ALERT_WINDOW')) process.exit(1)"
+          npx expo export --platform all --output-dir /tmp/mindshed-mobile-export
+      - name: Build deployable API image
+        run: docker build --file apps/api/Dockerfile --tag mindshed-api:verify .
 
   database:
     name: PostgreSQL lifecycle and HTTP boundary
@@ -51,12 +76,14 @@ jobs:
     env:
       DATABASE_URL: postgres://mindshed:ci-only-password@127.0.0.1:5432/mindshed_test
     steps:
-      - uses: actions/checkout@v6
-      - uses: actions/setup-node@v5
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
         with:
-          node-version: 22
+          node-version-file: .nvmrc
           cache: npm
       - run: npm ci
+      - run: npm run db:generate --workspace @mindshed/api
+      - run: git diff --exit-code -- apps/api/drizzle
       - run: npm run db:migrate --workspace @mindshed/api
       - run: npm run test:integration --workspace @mindshed/api
       - run: npm run test:http --workspace @mindshed/api

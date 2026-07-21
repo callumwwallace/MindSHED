@@ -13,7 +13,9 @@ import { Body, BodyBold, Heading } from '@/components/ms/text';
 import { TapSlider } from '@/components/ms/tap-slider';
 import { MS } from '@/constants/mindshed';
 import { feedback } from '@/lib/haptics';
+import { MAX_RESEARCH_NEEDS, toggleNeedSelection } from '@/lib/checkin-policy';
 import { getGardenRestState } from '@/lib/garden-progress';
+import { goBackOrReplace } from '@/lib/navigation';
 import { useReducedMotion } from '@/hooks/use-reduced-motion';
 import { getCareSuggestion } from '@/lib/wellbeing-guidance';
 import { queuePilotCheckin } from '@/store/pilot-queue';
@@ -84,7 +86,7 @@ export default function CheckInScreen() {
         <View pointerEvents="none" style={{ position: 'absolute', inset: 0, backgroundColor: 'rgba(238,245,227,0.2)' }} />
 
         <Pressable
-          onPress={() => router.back()}
+          onPress={() => goBackOrReplace('/')}
           accessibilityRole="button"
           accessibilityLabel="Close check-in"
           style={{
@@ -236,9 +238,11 @@ export default function CheckInScreen() {
             <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 16 }}>
               {NEEDS.map((item) => {
                 const selected = needs.includes(item);
-                return <Pressable key={item} onPress={() => setNeeds((current) => selected ? current.filter((value) => value !== item) : item === 'Nothing yet' ? ['Nothing yet'] : [...current.filter((value) => value !== 'Nothing yet'), item])} accessibilityRole="checkbox" accessibilityState={{ checked: selected }} style={{ borderRadius: 999, paddingVertical: 9, paddingHorizontal: 13, backgroundColor: selected ? MS.color.forest : MS.color.surface }}><BodyBold size={10.5} color={selected ? MS.color.surface : MS.color.forest}>{item}</BodyBold></Pressable>;
+                const atLimit = item !== 'Nothing yet' && !selected && needs.filter((value) => value !== 'Nothing yet').length >= MAX_RESEARCH_NEEDS;
+                return <Pressable key={item} disabled={atLimit} onPress={() => setNeeds((current) => toggleNeedSelection(current, item))} accessibilityRole="checkbox" accessibilityState={{ checked: selected, disabled: atLimit }} style={{ borderRadius: 999, paddingVertical: 9, paddingHorizontal: 13, backgroundColor: selected ? MS.color.forest : MS.color.surface, opacity: atLimit ? 0.45 : 1 }}><BodyBold size={10.5} color={selected ? MS.color.surface : MS.color.forest}>{item}</BodyBold></Pressable>;
               })}
             </View>
+            <Body size={10} color={MS.color.faint} style={{ marginTop: -8, marginBottom: 14 }}>Choose up to three. “Nothing yet” is always private and is not uploaded.</Body>
 
             <TextInput
               value={note}
@@ -317,7 +321,7 @@ export default function CheckInScreen() {
             {(mood === 1 || stress >= 9) && <Pressable onPress={() => router.replace('/support')} accessibilityRole="button" accessibilityLabel="See confidential and urgent UK support options from real people" style={{ marginTop: 12, borderRadius: 18, backgroundColor: '#F8DFD7', padding: 14, flexDirection: 'row', alignItems: 'center', gap: 11 }}><Feather name="life-buoy" size={17} color={MS.color.danger} /><View style={{ flex: 1 }}><BodyBold size={11.5} color={MS.color.inkSoft}>Support from a real person is here too</BodyBold><Body size={10.5} color={MS.color.muted}>Confidential and urgent UK options.</Body></View><Feather name="chevron-right" size={16} color={MS.color.forestMuted} /></Pressable>}
 
             <PillButton label="See this in your wellbeing picture" onPress={() => router.replace('/(tabs)/insights')} style={{ marginTop: 18 }} />
-            <PillButton label="Return to the garden" onPress={() => router.back()} color={MS.color.surface} textColor={MS.color.forest} style={{ marginTop: 18 }} />
+            <PillButton label="Return to the garden" onPress={() => goBackOrReplace('/')} color={MS.color.surface} textColor={MS.color.forest} style={{ marginTop: 18 }} />
           </View>
         )}
       </ScrollView>

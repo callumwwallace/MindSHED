@@ -29,6 +29,13 @@
       "when": 1784148957097,
       "tag": "0003_confused_franklin_richards",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1784659225433,
+      "tag": "0004_condemned_zombie",
+      "breakpoints": true
     }
   ]
 }

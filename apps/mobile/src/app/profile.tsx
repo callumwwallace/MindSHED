@@ -1,4 +1,3 @@
-import { router } from 'expo-router';
 import { useState } from 'react';
 import { ScrollView, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -8,6 +7,7 @@ import { ScreenHeader } from '@/components/ms/screen-header';
 import { Body, BodyBold } from '@/components/ms/text';
 import { MS } from '@/constants/mindshed';
 import { feedback } from '@/lib/haptics';
+import { goBackOrReplace } from '@/lib/navigation';
 import { useWellness } from '@/store/wellness';
 
 export default function ProfileScreen() {
@@ -20,7 +20,7 @@ export default function ProfileScreen() {
     if (!name.trim()) return;
     setProfileName(name.trim());
     feedback.success();
-    router.back();
+    goBackOrReplace('/(tabs)/you');
   };
 
   return (

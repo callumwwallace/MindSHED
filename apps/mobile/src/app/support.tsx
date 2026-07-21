@@ -5,6 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Body, BodyBold, Heading } from '@/components/ms/text';
 import { MS } from '@/constants/mindshed';
+import { goBackOrReplace } from '@/lib/navigation';
 
 const RESOURCES = [
   {
@@ -50,7 +51,7 @@ export default function SupportScreen() {
       showsVerticalScrollIndicator={false}>
       <View style={{ flexDirection: 'row', alignItems: 'center' }}>
         <Pressable
-          onPress={() => router.back()}
+          onPress={() => goBackOrReplace('/(tabs)/places')}
           accessibilityLabel="Close support"
           accessibilityRole="button"
           style={{ width: 44, height: 44, borderRadius: 22, backgroundColor: MS.color.surface, alignItems: 'center', justifyContent: 'center' }}>

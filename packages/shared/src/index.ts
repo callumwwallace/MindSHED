@@ -54,6 +54,12 @@ export function scoreSwemwbs(responses: readonly number[]) {
 
 export const pilotParticipantId = z.string().uuid();
 export const pilotSecret = z.string().min(32).max(128);
+export const pilotAppVersion = z
+  .string()
+  .trim()
+  .min(5)
+  .max(64)
+  .regex(/^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/, "app version must use semantic versioning");
 
 export const pilotEnrolInput = z
   .object({
@@ -85,7 +91,16 @@ export const pilotConsentInput = pilotCredentialsInput
     healthDataConsent: z.boolean(),
     marketingConsent: z.boolean(),
   })
-  .strict();
+  .strict()
+  .superRefine((consent, context) => {
+    if (consent.healthDataConsent && !consent.researchConsent) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["healthDataConsent"],
+        message: "health-data consent requires research consent",
+      });
+    }
+  });
 
 const relativeDay = z.number().int().min(0).max(366);
 const eventId = z.string().uuid();
@@ -144,38 +159,31 @@ const pulseEvent = z
   })
   .strict();
 
-const engagementEvent = z
-  .object({
-    eventId,
-    schemaVersion: z.literal(PILOT_SCHEMA_VERSION),
-    relativeDay,
-    kind: z.literal("engagement"),
-    payload: z
-      .object({
-        activity: z.enum([
-          "checkin_completed",
-          "pulse_completed",
-          "breathing_completed",
-          "grounding_completed",
-          "activity_completed",
-        ]),
-        count: z.literal(1),
-      })
-      .strict(),
-  })
-  .strict();
-
 export const pilotEvent = z.discriminatedUnion("kind", [
   checkinEvent,
   pulseEvent,
-  engagementEvent,
 ]);
 
 export const pilotIngestInput = pilotCredentialsInput
   .extend({
+    appVersion: pilotAppVersion,
     events: z.array(pilotEvent).min(1).max(50),
   })
-  .strict();
+  .strict()
+  .superRefine((batch, context) => {
+    const logicalEvents = new Set<string>();
+    for (const [index, event] of batch.events.entries()) {
+      const key = `${event.relativeDay}:${event.kind}`;
+      if (logicalEvents.has(key)) {
+        context.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ["events", index],
+          message: "a batch may contain only one event of each kind per relative day",
+        });
+      }
+      logicalEvents.add(key);
+    }
+  });
 
 export type PilotEnrolInput = z.infer<typeof pilotEnrolInput>;
 export type PilotCredentialsInput = z.infer<typeof pilotCredentialsInput>;

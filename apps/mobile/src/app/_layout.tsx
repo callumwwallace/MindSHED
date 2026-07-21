@@ -4,12 +4,15 @@ import { DefaultTheme, Stack, ThemeProvider, useRouter, useSegments } from 'expo
 import { useEffect } from 'react';
 import { Platform, View } from 'react-native';
 
-import { MS } from '@/constants/mindshed';
-import { PilotSyncAgent } from '@/components/pilot-sync-agent';
 import { HealthSyncAgent } from '@/components/health-sync-agent';
+import { NotificationResponseAgent } from '@/components/notification-response-agent';
+import { PilotSyncAgent } from '@/components/pilot-sync-agent';
+import { PrivacyShield } from '@/components/privacy-shield';
+import { WebUnavailable } from '@/components/web-unavailable';
+import { MS } from '@/constants/mindshed';
+import { needsOnboarding } from '@/lib/lifecycle';
 import { ApiProvider } from '@/lib/trpc';
 import { useWellness } from '@/store/wellness';
-import { needsOnboarding } from '@/lib/lifecycle';
 
 function LifecycleGate() {
   const router = useRouter();
@@ -26,7 +29,7 @@ function LifecycleGate() {
   return <View pointerEvents="auto" style={{ position: 'absolute', inset: 0, zIndex: 100, backgroundColor: MS.color.cream }} />;
 }
 
-export default function RootLayout() {
+function NativeRootLayout() {
   const [fontsLoaded, fontError] = useFonts({
     HappyMonkey_400Regular,
     Nunito_400Regular,
@@ -44,7 +47,8 @@ export default function RootLayout() {
       <ThemeProvider value={DefaultTheme}>
         <PilotSyncAgent />
         <HealthSyncAgent />
-        <View style={Platform.OS === 'web' ? { flex: 1, width: '100%', maxWidth: 520, alignSelf: 'center', backgroundColor: MS.color.cream, shadowColor: MS.color.shadow, shadowOpacity: 0.12, shadowRadius: 28, shadowOffset: { width: 0, height: 0 } } : { flex: 1 }}>
+        <NotificationResponseAgent />
+        <View style={{ flex: 1 }}>
         <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: MS.color.cream } }}>
           <Stack.Screen name="(tabs)" />
           <Stack.Screen name="check-in" options={{ presentation: 'modal' }} />
@@ -54,7 +58,7 @@ export default function RootLayout() {
           <Stack.Screen name="support" options={{ presentation: 'modal' }} />
           <Stack.Screen name="garden" options={{ presentation: 'fullScreenModal' }} />
           <Stack.Screen name="garden-progress" />
-          <Stack.Screen name="onboarding" options={{ presentation: 'fullScreenModal' }} />
+          <Stack.Screen name="onboarding" options={{ presentation: 'fullScreenModal', gestureEnabled: false }} />
           <Stack.Screen name="pulse" options={{ presentation: 'fullScreenModal' }} />
           <Stack.Screen name="profile" />
           <Stack.Screen name="daily-nudge" />
@@ -76,8 +80,13 @@ export default function RootLayout() {
           <Stack.Screen name="history" />
         </Stack>
         <LifecycleGate />
+        <PrivacyShield />
         </View>
       </ThemeProvider>
     </ApiProvider>
   );
+}
+
+export default function RootLayout() {
+  return Platform.OS === 'web' ? <WebUnavailable /> : <NativeRootLayout />;
 }

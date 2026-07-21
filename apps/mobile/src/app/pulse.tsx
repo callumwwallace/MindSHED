@@ -9,6 +9,7 @@ import { PillButton } from '@/components/ms/pill-button';
 import { Body, BodyBold, CharacterText, Display, Heading } from '@/components/ms/text';
 import { MS } from '@/constants/mindshed';
 import { feedback } from '@/lib/haptics';
+import { goBackOrReplace } from '@/lib/navigation';
 import {
   SWEMWBS_COPYRIGHT,
   SWEMWBS_INTRODUCTION,
@@ -67,7 +68,7 @@ export default function PulseScreen() {
 
   const close = () => {
     if (responses.some((response) => response !== null)) savePulseDraft(responses);
-    router.back();
+    goBackOrReplace('/(tabs)/insights');
   };
 
   const choose = (value: number) => {
@@ -109,7 +110,7 @@ export default function PulseScreen() {
   if (!schedule.due && !draft && !(__DEV__ && params.preview === 'questions')) {
     return (
       <View style={{ flex: 1, backgroundColor: MS.color.cream, paddingTop: insets.top + 14, paddingHorizontal: 20, paddingBottom: insets.bottom + 22 }}>
-        <Pressable onPress={() => router.back()} accessibilityRole="button" accessibilityLabel="Go back" style={{ width: 44, height: 44, borderRadius: 22, backgroundColor: MS.color.surface, alignItems: 'center', justifyContent: 'center' }}><Feather name="arrow-left" size={18} color={MS.color.forest} /></Pressable>
+        <Pressable onPress={() => goBackOrReplace('/(tabs)/insights')} accessibilityRole="button" accessibilityLabel="Go back" style={{ width: 44, height: 44, borderRadius: 22, backgroundColor: MS.color.surface, alignItems: 'center', justifyContent: 'center' }}><Feather name="arrow-left" size={18} color={MS.color.forest} /></Pressable>
         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', paddingBottom: 54 }}>
           <View style={{ width: 78, height: 78, borderRadius: 28, backgroundColor: MS.color.sageSoft, alignItems: 'center', justifyContent: 'center' }}><Feather name="check-circle" size={29} color={MS.color.forest} /></View>
           <Display size={27} color={MS.color.inkSoft} style={{ textAlign: 'center', marginTop: 22 }}>This fortnight’s letter is already filed</Display>

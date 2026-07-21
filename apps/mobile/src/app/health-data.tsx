@@ -9,6 +9,7 @@ import { Body, BodyBold, Heading } from '@/components/ms/text';
 import { MS } from '@/constants/mindshed';
 import type { HealthAccessResult } from '@/lib/health-context';
 import { checkHealthAvailability, openHealthSettings, readHealthDailySummaries, requestHealthAccess } from '@/lib/health-service';
+import { isHealthPermissionUnavailable } from '@/lib/health-service-errors';
 import { useWellness } from '@/store/wellness';
 
 type ScreenState = 'checking' | 'idle' | 'connecting' | 'syncing' | 'ready' | 'error';
@@ -46,8 +47,13 @@ export default function HealthDataScreen() {
       const next = await readHealthDailySummaries(21);
       saveSummaries(next);
       setScreenState('ready');
-    } catch {
-      setError(`MindSHED could not read the selected ${sourceName} data. You can review access in your phone settings.`);
+    } catch (caught) {
+      if (isHealthPermissionUnavailable(caught)) {
+        disconnect();
+        setError(`${sourceName} access was removed. Stored phone-health summaries were deleted; you can reconnect at any time.`);
+      } else {
+        setError(`MindSHED could not read the selected ${sourceName} data. You can review access in your phone settings.`);
+      }
       setScreenState('error');
     }
   };
@@ -116,4 +122,3 @@ export default function HealthDataScreen() {
     </ScrollView>
   );
 }
-

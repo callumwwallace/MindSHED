@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
-import { localPrivateStorage } from '@/lib/local-private-storage';
+import { flushLocalPrivateStorageWrites, localPrivateStorage } from '@/lib/local-private-storage';
 import { scoreSwemwbs } from '@/lib/swemwbs';
 
 // Local-first private state. Research-eligible structured events are copied to
@@ -337,4 +337,15 @@ export const useWellness = create<WellnessState>()(
 
 export function useTodayCheckin(): Checkin | undefined {
   return useWellness((s) => s.checkins.find((c) => c.date === todayKey()));
+}
+
+export async function flushWellnessPersistence(): Promise<void> {
+  await flushLocalPrivateStorageWrites();
+}
+
+export async function clearWellnessDataDurably(): Promise<void> {
+  useWellness.getState().clearLocalWellnessData();
+  await flushLocalPrivateStorageWrites();
+  await useWellness.persist.clearStorage();
+  await flushLocalPrivateStorageWrites();
 }

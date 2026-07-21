@@ -1,6 +1,8 @@
 import * as Notifications from 'expo-notifications';
 import { Platform } from 'react-native';
 
+import { parseNudgeTime } from './notification-route';
+
 const NUDGE_KIND = 'mindshed-daily-nudge';
 const CHANNEL_ID = 'gentle-reminders';
 
@@ -50,22 +52,20 @@ export async function configureDailyNudge(enabled: boolean, time: string): Promi
   }
   if (!notificationsAllowed(permissions)) return 'denied';
 
-  const [hourText, minuteText] = time.split(':');
-  const hour = Number(hourText);
-  const minute = Number(minuteText);
-  if (!Number.isInteger(hour) || !Number.isInteger(minute)) return 'unavailable';
+  const parsedTime = parseNudgeTime(time);
+  if (!parsedTime) return 'unavailable';
 
   await Notifications.scheduleNotificationAsync({
     content: {
       title: 'A quiet note from Bramble',
       body: 'I’m pottering in the garden if a small check-in would help.',
       sound: false,
-      data: { kind: NUDGE_KIND, route: '/' },
+      data: { kind: NUDGE_KIND, route: '/check-in' },
     },
     trigger: {
       type: Notifications.SchedulableTriggerInputTypes.DAILY,
-      hour,
-      minute,
+      hour: parsedTime.hour,
+      minute: parsedTime.minute,
       channelId: Platform.OS === 'android' ? CHANNEL_ID : undefined,
     },
   });

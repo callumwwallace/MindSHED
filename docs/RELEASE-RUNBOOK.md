@@ -1,7 +1,7 @@
 # MindSHED pilot release runbook
 
 Status: engineering runbook; external approvals still required  
-Updated: 16 July 2026
+Updated: 21 July 2026
 
 ## 1. Before a release candidate
 
@@ -12,23 +12,26 @@ Updated: 16 July 2026
 - Record ethics, DPIA, safeguarding, penetration-test and accessibility sign-off.
 - Confirm the production API, database, backups and monitoring are in the
   approved UK/EU environment and request bodies/source IPs are not retained.
-- Configure EAS production `EXPO_PUBLIC_API_URL`; do not configure
+- Configure every production value in `apps/mobile/.env.example`, including
+  HTTPS API/policy/support URLs and verified contacts; do not configure
   `EXPO_PUBLIC_LOCAL_PILOT_CODE` in preview or production.
 - Keep `EXPO_PUBLIC_LEGAL_DOCUMENTS_APPROVED=false` until the exact embedded
   documents and versions have written legal/controller approval. Enable the
-  marketing flag only when its separate approval evidence exists. Pulse has no
-  production feature flag and must remain absent until it is implemented.
+  marketing flag only when its separate approval evidence exists. Keep both
+  mobile and API SWEMWBS upload flags false until their approval exists.
 
 ## 2. Required automated evidence
 
 The GitHub `Verify` workflow must pass on the release commit. It runs:
 
-- workspace TypeScript checks, mobile lint and strict research-contract tests;
+- workspace TypeScript checks, mobile lint, mobile policies and strict research-contract tests;
 - Expo Doctor against the pinned SDK-compatible tool;
 - production dependency audit with high/critical findings as failures;
 - migrations against disposable PostgreSQL;
 - pseudonymous enrolment, consent, upload, retry, export, withdrawal and deletion;
-- actual HTTP credential, CORS and payload-limit checks;
+- actual HTTP credential, security-header, CORS and payload-limit checks;
+- production-guarded iOS/Android/web bundles, native config introspection, API
+  bundle and non-root container build;
 - dry-run/executed/scoped data-lifecycle tests.
 
 Enable GitHub secret scanning and push protection in repository settings. Treat

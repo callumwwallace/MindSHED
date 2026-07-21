@@ -9,6 +9,7 @@ import { PillButton } from '@/components/ms/pill-button';
 import { Body, BodyBold, CharacterText, Display, Heading } from '@/components/ms/text';
 import { MS } from '@/constants/mindshed';
 import { feedback } from '@/lib/haptics';
+import { goBackOrReplace } from '@/lib/navigation';
 
 const STEPS = [
   { count: 5, sense: 'things you can see', prompt: 'Let your eyes settle. Name five shapes, colours or objects.', icon: 'eye', color: '#DDECEF' },
@@ -32,7 +33,7 @@ export default function GroundingScreen() {
 
   return (
     <View style={{ flex: 1, backgroundColor: complete ? '#DCE8E2' : current.color }}>
-      <Pressable onPress={() => router.back()} accessibilityRole="button" accessibilityLabel="Close grounding exercise" style={{ position: 'absolute', zIndex: 2, top: insets.top + 12, left: 18, width: 44, height: 44, borderRadius: 22, backgroundColor: 'rgba(255,254,247,0.78)', alignItems: 'center', justifyContent: 'center' }}><Feather name="x" size={18} color={MS.color.forest} /></Pressable>
+      <Pressable onPress={() => goBackOrReplace('/')} accessibilityRole="button" accessibilityLabel="Close grounding exercise" style={{ position: 'absolute', zIndex: 2, top: insets.top + 12, left: 18, width: 44, height: 44, borderRadius: 22, backgroundColor: 'rgba(255,254,247,0.78)', alignItems: 'center', justifyContent: 'center' }}><Feather name="x" size={18} color={MS.color.forest} /></Pressable>
 
       {!complete ? (
         <View style={{ flex: 1, paddingTop: insets.top + 82, paddingHorizontal: 22, paddingBottom: insets.bottom + 24 }}>
@@ -56,7 +57,7 @@ export default function GroundingScreen() {
           <BodyBold size={10} color={MS.color.forestMuted} style={{ letterSpacing: 1.3, marginTop: 26 }}>BACK IN THE ROOM</BodyBold>
           <Display size={29} color={MS.color.inkSoft} style={{ textAlign: 'center', marginTop: 6 }}>You found this moment.</Display>
           <CharacterText size={13} color={MS.color.forestMuted} style={{ textAlign: 'center', marginTop: 10 }}>Nothing else is required. You can stay, leave, or ask for support.</CharacterText>
-          <PillButton label="Return to the garden" onPress={() => router.back()} style={{ alignSelf: 'stretch', marginTop: 28 }} />
+          <PillButton label="Return to the garden" onPress={() => goBackOrReplace('/')} style={{ alignSelf: 'stretch', marginTop: 28 }} />
           <Pressable onPress={() => router.push('/support')} accessibilityRole="button" style={{ padding: 14 }}><BodyBold size={11.5} color={MS.color.forest}>See support from real people</BodyBold></Pressable>
         </View>
       )}

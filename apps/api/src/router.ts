@@ -9,15 +9,27 @@ import {
   pilotIngestInput,
 } from "@mindshed/shared";
 import { TRPCError } from "@trpc/server";
-import { and, desc, eq, gte, isNull, lt, lte, sql } from "drizzle-orm";
+import { and, count, desc, eq, gte, inArray, isNull, lt, lte, sql } from "drizzle-orm";
 import { randomUUID } from "node:crypto";
 import { db } from "./db";
+import { pilotRuntimeConfig } from "./config";
 import { pilotConsents, pilotEvents, pilotParticipants, pilotStudyCodes } from "./db/schema";
 import { hashAccessCode, hashSecret, opaqueSecret } from "./security/secrets";
 import { publicProcedure, router } from "./trpc";
 
 function utcDate(): string {
   return new Date().toISOString().slice(0, 10);
+}
+
+function compareVersions(left: string, right: string): number {
+  const numbers = (value: string) => value.split("-")[0]?.split(".").map((part) => Number(part)) ?? [];
+  const leftParts = numbers(left);
+  const rightParts = numbers(right);
+  for (let index = 0; index < Math.max(leftParts.length, rightParts.length); index += 1) {
+    const difference = (leftParts[index] ?? 0) - (rightParts[index] ?? 0);
+    if (difference !== 0) return difference;
+  }
+  return 0;
 }
 
 async function authenticateParticipant(participantId: string, participantToken: string) {
@@ -74,18 +86,23 @@ export const appRouter = router({
     ping: publicProcedure.query(() => ({ ok: true, service: "mindshed-api" })),
   }),
   pilot: router({
-    config: publicProcedure.query(() => ({
-      schemaVersion: PILOT_SCHEMA_VERSION,
-      privacyNoticeVersion: PRIVACY_NOTICE_VERSION,
-      consentDocumentVersion: PILOT_CONSENT_VERSION,
-      enrolmentOpen: process.env.PILOT_ENROLMENT_ENABLED === "true",
-      researchUploadsEnabled: process.env.PILOT_UPLOADS_ENABLED === "true",
-      swemwbsUploadsEnabled: process.env.PILOT_SWEMWBS_UPLOADS_ENABLED === "true",
-      minimumAppVersion: process.env.PILOT_MINIMUM_APP_VERSION ?? "1.0.0",
-    })),
+    config: publicProcedure.query(() => {
+      const runtime = pilotRuntimeConfig();
+      return {
+        schemaVersion: PILOT_SCHEMA_VERSION,
+        privacyNoticeVersion: PRIVACY_NOTICE_VERSION,
+        consentDocumentVersion: PILOT_CONSENT_VERSION,
+        legalDocumentsApproved: runtime.legalDocumentsApproved,
+        enrolmentOpen: runtime.enrolmentEnabled && runtime.legalDocumentsApproved,
+        researchUploadsEnabled: runtime.uploadsEnabled && runtime.legalDocumentsApproved,
+        swemwbsUploadsEnabled: runtime.swemwbsUploadsEnabled && runtime.legalDocumentsApproved,
+        minimumAppVersion: runtime.minimumAppVersion,
+      };
+    }),
 
     enrol: publicProcedure.input(pilotEnrolInput).mutation(async ({ input }) => {
-      if (process.env.PILOT_ENROLMENT_ENABLED !== "true") {
+      const runtime = pilotRuntimeConfig();
+      if (!runtime.enrolmentEnabled || !runtime.legalDocumentsApproved) {
         throw new TRPCError({ code: "PRECONDITION_FAILED", message: "Pilot enrolment is unavailable" });
       }
       const codeHashKey = process.env.PILOT_CODE_HASH_KEY;
@@ -98,11 +115,11 @@ export const appRouter = router({
         .where(eq(pilotStudyCodes.codeHash, hashAccessCode(input.accessCode, codeHashKey)))
         .limit(1);
       if (!studyCode) {
-        throw new TRPCError({ code: "UNAUTHORIZED", message: "Invalid pilot access code" });
+        throw new TRPCError({ code: "FORBIDDEN", message: "Pilot enrolment could not be completed" });
       }
       const today = utcDate();
       if (!studyCode.active || studyCode.validFrom > today || studyCode.expiresOn < today) {
-        throw new TRPCError({ code: "FORBIDDEN", message: "This pilot access code is not active" });
+        throw new TRPCError({ code: "FORBIDDEN", message: "Pilot enrolment could not be completed" });
       }
 
       const participantToken = opaqueSecret();
@@ -122,7 +139,7 @@ export const appRouter = router({
           )
           .returning({ studyCode: pilotStudyCodes.studyCode });
         if (!redeemed) {
-          throw new TRPCError({ code: "CONFLICT", message: "This pilot cohort is full" });
+          throw new TRPCError({ code: "FORBIDDEN", message: "Pilot enrolment could not be completed" });
         }
         const [created] = await transaction
           .insert(pilotParticipants)
@@ -170,6 +187,13 @@ export const appRouter = router({
     }),
 
     recordConsent: publicProcedure.input(pilotConsentInput).mutation(async ({ input }) => {
+      const runtime = pilotRuntimeConfig();
+      if (input.researchConsent && !runtime.legalDocumentsApproved) {
+        throw new TRPCError({ code: "PRECONDITION_FAILED", message: "Research consent is not open" });
+      }
+      if (input.marketingConsent && !runtime.marketingConsentEnabled) {
+        throw new TRPCError({ code: "BAD_REQUEST", message: "Marketing consent is not enabled" });
+      }
       const participant = await authenticateParticipant(input.participantId, input.participantToken);
       if (participant.researchWithdrawnOn && input.researchConsent) {
         throw new TRPCError({
@@ -179,6 +203,30 @@ export const appRouter = router({
       }
       const now = new Date();
       await db().transaction(async (transaction) => {
+        await transaction.execute(sql`
+          select 1 from pilot_participants where id = ${participant.id} for update
+        `);
+        const [currentParticipant] = await transaction
+          .select({ researchWithdrawnOn: pilotParticipants.researchWithdrawnOn })
+          .from(pilotParticipants)
+          .where(eq(pilotParticipants.id, participant.id))
+          .limit(1);
+        if (!currentParticipant) {
+          throw new TRPCError({ code: "UNAUTHORIZED", message: "Invalid pilot credentials" });
+        }
+        if (currentParticipant.researchWithdrawnOn && input.researchConsent) {
+          throw new TRPCError({
+            code: "PRECONDITION_FAILED",
+            message: "Research consent cannot be restored after withdrawal",
+          });
+        }
+        const [history] = await transaction
+          .select({ value: count() })
+          .from(pilotConsents)
+          .where(eq(pilotConsents.participantId, participant.id));
+        if (Number(history?.value ?? 0) >= runtime.maxConsentsPerParticipant) {
+          throw new TRPCError({ code: "TOO_MANY_REQUESTS", message: "Consent history limit reached" });
+        }
         await transaction
           .update(pilotConsents)
           .set({ supersededAt: now })
@@ -202,8 +250,15 @@ export const appRouter = router({
     }),
 
     ingest: publicProcedure.input(pilotIngestInput).mutation(async ({ input }) => {
-      if (process.env.PILOT_UPLOADS_ENABLED !== "true") {
+      const runtime = pilotRuntimeConfig();
+      if (!runtime.uploadsEnabled || !runtime.legalDocumentsApproved) {
         throw new TRPCError({ code: "PRECONDITION_FAILED", message: "Pilot uploads are paused" });
+      }
+      if (compareVersions(input.appVersion, runtime.minimumAppVersion) < 0) {
+        throw new TRPCError({
+          code: "PRECONDITION_FAILED",
+          message: `MindSHED ${runtime.minimumAppVersion} or newer is required`,
+        });
       }
       const participant = await authenticateParticipant(input.participantId, input.participantToken);
       const consent = await latestConsent(participant.id);
@@ -215,35 +270,109 @@ export const appRouter = router({
       }
       if (
         input.events.some((event) => event.kind === "pulse")
-        && process.env.PILOT_SWEMWBS_UPLOADS_ENABLED !== "true"
+        && !runtime.swemwbsUploadsEnabled
       ) {
         throw new TRPCError({
           code: "PRECONDITION_FAILED",
           message: "SWEMWBS research uploads are not approved",
         });
       }
-      const inserted = await db()
-        .insert(pilotEvents)
-        .values(
-          input.events.map((event) => ({
-            eventId: event.eventId,
-            participantId: participant.id,
-            schemaVersion: event.schemaVersion,
-            relativeDay: event.relativeDay,
-            kind: event.kind,
-            payload: event.payload,
-          })),
-        )
-        .onConflictDoNothing({ target: pilotEvents.eventId })
-        .returning({ eventId: pilotEvents.eventId });
-      await db()
-        .update(pilotParticipants)
-        .set({ lastSeenOn: utcDate() })
-        .where(eq(pilotParticipants.id, participant.id));
-      return { accepted: inserted.length, duplicates: input.events.length - inserted.length };
+      return db().transaction(async (transaction) => {
+        await transaction.execute(sql`
+          select 1 from pilot_participants where id = ${participant.id} for update
+        `);
+        const [[currentParticipant], [currentConsent]] = await Promise.all([
+          transaction
+            .select({ researchWithdrawnOn: pilotParticipants.researchWithdrawnOn })
+            .from(pilotParticipants)
+            .where(eq(pilotParticipants.id, participant.id))
+            .limit(1),
+          transaction
+            .select({
+              researchConsent: pilotConsents.researchConsent,
+              healthDataConsent: pilotConsents.healthDataConsent,
+            })
+            .from(pilotConsents)
+            .where(
+              and(
+                eq(pilotConsents.participantId, participant.id),
+                isNull(pilotConsents.supersededAt),
+              ),
+            )
+            .orderBy(desc(pilotConsents.recordedAt))
+            .limit(1),
+        ]);
+        if (!currentParticipant) {
+          throw new TRPCError({ code: "UNAUTHORIZED", message: "Invalid pilot credentials" });
+        }
+        if (
+          currentParticipant.researchWithdrawnOn
+          || !currentConsent?.researchConsent
+          || !currentConsent.healthDataConsent
+        ) {
+          throw new TRPCError({
+            code: "FORBIDDEN",
+            message: "Active research and health-data consent is required",
+          });
+        }
+        const existingIds = await transaction
+          .select({ eventId: pilotEvents.eventId })
+          .from(pilotEvents)
+          .where(
+            and(
+              eq(pilotEvents.participantId, participant.id),
+              inArray(pilotEvents.eventId, input.events.map((event) => event.eventId)),
+            ),
+          );
+        const duplicateIds = new Set(existingIds.map((event) => event.eventId));
+        const newEvents = input.events.filter((event) => !duplicateIds.has(event.eventId));
+
+        const existingLogicalEvents = await transaction
+          .select({ relativeDay: pilotEvents.relativeDay, kind: pilotEvents.kind })
+          .from(pilotEvents)
+          .where(eq(pilotEvents.participantId, participant.id));
+        const logicalKeys = new Set(
+          existingLogicalEvents.map((event) => `${event.relativeDay}:${event.kind}`),
+        );
+        const additionalEvents = newEvents.filter(
+          (event) => !logicalKeys.has(`${event.relativeDay}:${event.kind}`),
+        ).length;
+        if (existingLogicalEvents.length + additionalEvents > runtime.maxEventsPerParticipant) {
+          throw new TRPCError({ code: "PAYLOAD_TOO_LARGE", message: "Participant event limit reached" });
+        }
+
+        if (newEvents.length) {
+          await transaction
+            .insert(pilotEvents)
+            .values(
+              newEvents.map((event) => ({
+                eventId: event.eventId,
+                participantId: participant.id,
+                schemaVersion: event.schemaVersion,
+                relativeDay: event.relativeDay,
+                kind: event.kind,
+                payload: event.payload,
+              })),
+            )
+            .onConflictDoUpdate({
+              target: [pilotEvents.participantId, pilotEvents.relativeDay, pilotEvents.kind],
+              set: {
+                eventId: sql`excluded.event_id`,
+                schemaVersion: sql`excluded.schema_version`,
+                payload: sql`excluded.payload`,
+              },
+            });
+        }
+        await transaction
+          .update(pilotParticipants)
+          .set({ lastSeenOn: utcDate() })
+          .where(eq(pilotParticipants.id, participant.id));
+        return { accepted: newEvents.length, duplicates: duplicateIds.size };
+      });
     }),
 
     exportData: publicProcedure.input(pilotCredentialsInput).mutation(async ({ input }) => {
+      const runtime = pilotRuntimeConfig();
       const participant = await authenticateParticipant(input.participantId, input.participantToken);
       const [consents, events] = await Promise.all([
         db()
@@ -258,7 +387,8 @@ export const appRouter = router({
           })
           .from(pilotConsents)
           .where(eq(pilotConsents.participantId, participant.id))
-          .orderBy(pilotConsents.recordedAt),
+          .orderBy(pilotConsents.recordedAt)
+          .limit(runtime.maxConsentsPerParticipant + 1),
         db()
           .select({
             eventId: pilotEvents.eventId,
@@ -269,8 +399,12 @@ export const appRouter = router({
           })
           .from(pilotEvents)
           .where(eq(pilotEvents.participantId, participant.id))
-          .orderBy(pilotEvents.relativeDay, pilotEvents.eventId),
+          .orderBy(pilotEvents.relativeDay, pilotEvents.eventId)
+          .limit(runtime.maxEventsPerParticipant + 1),
       ]);
+      if (consents.length > runtime.maxConsentsPerParticipant || events.length > runtime.maxEventsPerParticipant) {
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Participant export exceeds its governed limit" });
+      }
       return {
         participantId: participant.id,
         researchWithdrawn: participant.researchWithdrawnOn !== null,
@@ -283,8 +417,18 @@ export const appRouter = router({
       .input(pilotDeletionCredentialsInput)
       .mutation(async ({ input }) => {
         const participant = await authenticateDeletion(input.participantId, input.deletionSecret);
+        const consent = await latestConsent(participant.id);
         const now = new Date();
         await db().transaction(async (transaction) => {
+          await transaction.execute(sql`
+            select 1 from pilot_participants where id = ${participant.id} for update
+          `);
+          const [current] = await transaction
+            .select({ researchWithdrawnOn: pilotParticipants.researchWithdrawnOn })
+            .from(pilotParticipants)
+            .where(eq(pilotParticipants.id, participant.id))
+            .limit(1);
+          if (current?.researchWithdrawnOn) return;
           await transaction
             .update(pilotParticipants)
             .set({ researchWithdrawnOn: utcDate(), lastSeenOn: utcDate() })
@@ -302,7 +446,7 @@ export const appRouter = router({
             participantId: participant.id,
             privacyNoticeVersion: PRIVACY_NOTICE_VERSION,
             consentDocumentVersion: PILOT_CONSENT_VERSION,
-            termsAccepted: true,
+            termsAccepted: consent?.termsAccepted ?? false,
             researchConsent: false,
             healthDataConsent: false,
             marketingConsent: false,

@@ -18,3 +18,7 @@ export const localPrivateStorage: StateStorage = {
     else window.localStorage.removeItem(name);
   },
 };
+
+export async function flushLocalPrivateStorageWrites(): Promise<void> {
+  // Browser localStorage writes are synchronous.
+}

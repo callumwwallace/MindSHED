@@ -14,6 +14,7 @@ const credentials = {
   participantId: "ad9bb0b6-9082-4fb1-af86-96f7060f3754",
   participantToken: "A".repeat(32),
 };
+const ingestCredentials = { ...credentials, appVersion: "1.0.0" };
 
 const checkin = {
   eventId: "e9299704-c329-47f8-acc8-a5ceaad9f205",
@@ -38,17 +39,17 @@ const pulse = {
 };
 
 test("accepts only the versioned structured pilot check-in", () => {
-  assert.equal(pilotIngestInput.safeParse({ ...credentials, events: [checkin] }).success, true);
+  assert.equal(pilotIngestInput.safeParse({ ...ingestCredentials, events: [checkin] }).success, true);
 });
 
 test("accepts only a complete correctly scored SWEMWBS pulse", () => {
-  assert.equal(pilotIngestInput.safeParse({ ...credentials, events: [pulse] }).success, true);
+  assert.equal(pilotIngestInput.safeParse({ ...ingestCredentials, events: [pulse] }).success, true);
   assert.equal(pilotIngestInput.safeParse({
-    ...credentials,
+    ...ingestCredentials,
     events: [{ ...pulse, payload: { ...pulse.payload, rawScore: 22 } }],
   }).success, false);
   assert.equal(pilotIngestInput.safeParse({
-    ...credentials,
+    ...ingestCredentials,
     events: [{ ...pulse, payload: { ...pulse.payload, metricScore: 20 } }],
   }).success, false);
 });
@@ -58,12 +59,12 @@ test("rejects free text inside an otherwise valid check-in", () => {
     ...checkin,
     payload: { ...checkin.payload, note: "private journal-like text" },
   };
-  assert.equal(pilotIngestInput.safeParse({ ...credentials, events: [withNote] }).success, false);
+  assert.equal(pilotIngestInput.safeParse({ ...ingestCredentials, events: [withNote] }).success, false);
 });
 
 test("rejects identifiers and precise timestamps at the batch boundary", () => {
   const unsafe = {
-    ...credentials,
+    ...ingestCredentials,
     email: "participant@example.com",
     capturedAt: new Date().toISOString(),
     events: [checkin],
@@ -73,14 +74,22 @@ test("rejects identifiers and precise timestamps at the batch boundary", () => {
 
 test("rejects journal fields and unrecognised event properties", () => {
   const unsafeEvent = { ...checkin, journalText: "must stay local" };
-  assert.equal(pilotIngestInput.safeParse({ ...credentials, events: [unsafeEvent] }).success, false);
+  assert.equal(pilotIngestInput.safeParse({ ...ingestCredentials, events: [unsafeEvent] }).success, false);
 });
 
 test("limits each upload batch to fifty events", () => {
   assert.equal(
-    pilotIngestInput.safeParse({ ...credentials, events: Array.from({ length: 51 }, () => checkin) }).success,
+    pilotIngestInput.safeParse({ ...ingestCredentials, events: Array.from({ length: 51 }, () => checkin) }).success,
     false,
   );
+});
+
+test("requires a semantic app version and one logical event per day", () => {
+  assert.equal(pilotIngestInput.safeParse({ ...credentials, appVersion: "latest", events: [checkin] }).success, false);
+  assert.equal(pilotIngestInput.safeParse({
+    ...ingestCredentials,
+    events: [checkin, { ...checkin, eventId: "5789fa5d-ea28-48be-bdbe-4ea679090d51" }],
+  }).success, false);
 });
 
 test("requires exact legal-document versions and affirmative app terms", () => {
@@ -96,4 +105,5 @@ test("requires exact legal-document versions and affirmative app terms", () => {
   assert.equal(pilotConsentInput.safeParse(consent).success, true);
   assert.equal(pilotConsentInput.safeParse({ ...consent, termsAccepted: false }).success, false);
   assert.equal(pilotConsentInput.safeParse({ ...consent, privacyNoticeVersion: "latest" }).success, false);
+  assert.equal(pilotConsentInput.safeParse({ ...consent, researchConsent: false, healthDataConsent: true }).success, false);
 });

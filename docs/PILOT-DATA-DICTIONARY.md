@@ -2,7 +2,7 @@
 
 Status: engineering draft for protocol, legal, ethics and DPIA approval  
 Schema: 1  
-Updated: 16 July 2026
+Updated: 21 July 2026
 
 This document describes the fields the current research ingestion service can
 accept. It is an allowlist, not permission to begin collection. Researchers and
@@ -44,7 +44,10 @@ and approve purposes, lawful bases, retention and recipients before release.
 ## Research events
 
 All events contain a random idempotency UUID, schema version and relative study
-day from 0 to 366. The service does not accept a client timestamp.
+day from 0 to 366. At most one event of each kind is stored per participant and
+relative day; a same-day edit replaces that logical event. The request carries
+a semantic app version for minimum-version enforcement, but the service does
+not store it. The service does not accept a client timestamp.
 
 ### Check-in
 
@@ -69,13 +72,6 @@ The licensed flow and official score transformation are implemented in the
 app. Research upload is independently fail-closed in the mobile build and API
 until the participant wording, Warwick digital presentation/feedback review,
 safeguarding response and statistical analysis plan are approved.
-
-### Engagement
-
-| Field | Values | Proposed purpose |
-| --- | --- | --- |
-| activity | check-in, pulse, breathing, grounding or general activity completed | Coarse feasibility/engagement analysis |
-| count | `1` | Aggregate completion without a navigation trail |
 
 ## Hard denylist
 

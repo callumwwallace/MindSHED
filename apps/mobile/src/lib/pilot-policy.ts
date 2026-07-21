@@ -1,3 +1,5 @@
+import type { PilotEvent } from '@mindshed/shared';
+
 export function relativePilotDay(enrolledAt: string, now = new Date()): number {
   const start = new Date(enrolledAt);
   const startDay = Date.UTC(start.getUTCFullYear(), start.getUTCMonth(), start.getUTCDate());
@@ -8,4 +10,14 @@ export function relativePilotDay(enrolledAt: string, now = new Date()): number {
 export function isPermanentPilotError(error: unknown): boolean {
   const code = (error as { data?: { code?: string } })?.data?.code;
   return ['BAD_REQUEST', 'UNAUTHORIZED', 'FORBIDDEN', 'CONFLICT', 'PRECONDITION_FAILED'].includes(code ?? '');
+}
+
+export function coalescePilotEvents(events: readonly PilotEvent[], requested: PilotEvent): PilotEvent[] {
+  if (events.some((event) => event.eventId === requested.eventId)) return [...events];
+  return [
+    ...events.filter(
+      (event) => event.relativeDay !== requested.relativeDay || event.kind !== requested.kind,
+    ),
+    requested,
+  ];
 }

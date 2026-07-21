@@ -1,6 +1,7 @@
 {
   "name": "mindshed",
   "private": true,
+  "packageManager": "npm@10.9.3",
   "workspaces": [
     "apps/*",
     "packages/*"
@@ -17,7 +18,16 @@
     "verify": "npm run typecheck && npm run lint --workspace mobile && npm run test --workspace mobile && npm run test --workspace @mindshed/api"
   },
   "engines": {
-    "node": ">=22"
+    "node": ">=22.18 <23"
+  },
+  "overrides": {
+    "fast-uri": "3.1.4",
+    "minimatch@>=10": {
+      "brace-expansion": "5.0.7"
+    },
+    "react-devtools-core": {
+      "shell-quote": "1.10.0"
+    }
   },
   "devDependencies": {
     "patch-package": "^8.0.1"

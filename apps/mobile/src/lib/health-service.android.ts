@@ -1,6 +1,7 @@
 import { NativeModules } from 'react-native';
 
 import { calendarDays, type HealthAccessResult } from './health-context';
+import { healthPermissionUnavailableError } from './health-service-errors';
 import type { HealthDailySummary } from '@/store/wellness';
 
 async function healthConnect() {
@@ -42,8 +43,12 @@ export async function requestHealthAccess(): Promise<boolean> {
 }
 
 export async function readHealthDailySummaries(dayCount = 21): Promise<HealthDailySummary[]> {
-  const { aggregateGroupByPeriod, initialize } = await healthConnect();
+  const { aggregateGroupByPeriod, getGrantedPermissions, initialize } = await healthConnect();
   if (!(await initialize())) return [];
+  const permissions = await getGrantedPermissions();
+  const canReadSteps = permissions.some((permission) => 'accessType' in permission && permission.accessType === 'read' && 'recordType' in permission && permission.recordType === 'Steps');
+  const canReadSleep = permissions.some((permission) => 'accessType' in permission && permission.accessType === 'read' && 'recordType' in permission && permission.recordType === 'SleepSession');
+  if (!canReadSteps && !canReadSleep) throw healthPermissionUnavailableError();
   const days = calendarDays(dayCount);
   const start = new Date(days[0].date);
   start.setHours(0, 0, 0, 0);
@@ -53,10 +58,13 @@ export async function readHealthDailySummaries(dayCount = 21): Promise<HealthDai
     timeRangeFilter: { operator: 'between' as const, startTime: start.toISOString(), endTime: end.toISOString() },
     timeRangeSlicer: { period: 'DAYS' as const, length: 1 },
   };
-  const [steps, sleep] = await Promise.all([
-    aggregateGroupByPeriod({ recordType: 'Steps', ...request }),
-    aggregateGroupByPeriod({ recordType: 'SleepSession', ...request }),
+  const [stepsResult, sleepResult] = await Promise.allSettled([
+    canReadSteps ? aggregateGroupByPeriod({ recordType: 'Steps', ...request }) : Promise.resolve([]),
+    canReadSleep ? aggregateGroupByPeriod({ recordType: 'SleepSession', ...request }) : Promise.resolve([]),
   ]);
+  const steps = stepsResult.status === 'fulfilled' ? stepsResult.value : [];
+  const sleep = sleepResult.status === 'fulfilled' ? sleepResult.value : [];
+  if (stepsResult.status === 'rejected' && sleepResult.status === 'rejected') throw stepsResult.reason;
   const stepsByDate = new Map(steps.map((bucket) => [calendarDays(1, new Date(bucket.startTime))[0].key, Math.max(0, Math.round(bucket.result.COUNT_TOTAL ?? 0))]));
   const sleepByDate = new Map(sleep.map((bucket) => [calendarDays(1, new Date(bucket.startTime))[0].key, Math.max(0, Math.round((bucket.result.SLEEP_DURATION_TOTAL ?? 0) / 60))]));
   const updatedAt = new Date().toISOString();

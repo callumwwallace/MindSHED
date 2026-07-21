@@ -1,5 +1,5 @@
 import Feather from '@expo/vector-icons/Feather';
-import { router, useLocalSearchParams } from 'expo-router';
+import { useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 import { Pressable, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -10,6 +10,7 @@ import { WanderingBramble } from '@/components/ms/wandering-bramble';
 import { MS } from '@/constants/mindshed';
 import { getGardenRestState } from '@/lib/garden-progress';
 import { feedback } from '@/lib/haptics';
+import { goBackOrReplace } from '@/lib/navigation';
 import { useTodayCheckin, useWellness } from '@/store/wellness';
 
 export default function QuietGardenScreen() {
@@ -60,7 +61,7 @@ export default function QuietGardenScreen() {
       />
 
       <Pressable
-        onPress={() => router.back()}
+        onPress={() => goBackOrReplace('/')}
         accessibilityLabel="Leave quiet garden"
         accessibilityRole="button"
         style={{

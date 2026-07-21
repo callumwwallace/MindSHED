@@ -25,6 +25,7 @@ test("HTTP boundary keeps credentials out of URLs and enforces lifecycle control
   assert.ok(process.env.DATABASE_URL, "DATABASE_URL is required for this integration test");
   process.env.PILOT_ENROLMENT_ENABLED = "true";
   process.env.PILOT_UPLOADS_ENABLED = "true";
+  process.env.PILOT_LEGAL_DOCUMENTS_APPROVED = "true";
   process.env.PILOT_CODE_HASH_KEY = "http-test-only-hmac-key";
   delete process.env.CORS_ORIGIN;
 
@@ -41,6 +42,12 @@ test("HTTP boundary keeps credentials out of URLs and enforces lifecycle control
   const address = server.server.address();
   assert.ok(address && typeof address !== "string");
   const baseUrl = `http://127.0.0.1:${address.port}`;
+  const health = await globalThis.fetch(`${baseUrl}/health`);
+  const readiness = await globalThis.fetch(`${baseUrl}/ready`);
+  assert.equal(health.status, 200);
+  assert.equal(readiness.status, 200);
+  assert.equal(health.headers.get("x-content-type-options"), "nosniff");
+  assert.equal(health.headers.get("x-frame-options"), "SAMEORIGIN");
   const requestedUrls: string[] = [];
   const trackedFetch: typeof fetch = async (input, init) => {
     requestedUrls.push(
