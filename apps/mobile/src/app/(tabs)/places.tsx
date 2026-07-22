@@ -94,6 +94,21 @@ export default function PlacesScreen() {
         </View>
       </Pressable>
 
+      <View style={{ flexDirection: 'row', gap: 10, marginTop: 12 }}>
+        <Pressable onPress={() => router.push('/nursery' as never)} accessibilityRole="button" accessibilityLabel="Go to the Nursery to grow a gentle habit" style={({ pressed }) => ({ flex: 1, minHeight: 218, borderRadius: MS.radius.xl, backgroundColor: '#D9E7C7', padding: 16, overflow: 'hidden', transform: [{ scale: pressed ? 0.98 : 1 }] })}>
+          <View style={{ marginHorizontal: -16, marginTop: -16, borderTopLeftRadius: MS.radius.xl, borderTopRightRadius: MS.radius.xl, overflow: 'hidden' }}><PlaceVignette variant="nursery" height={100} /></View>
+          <BodyBold size={9.5} color={MS.color.forestMuted} style={{ marginTop: 10 }}>THE NURSERY</BodyBold>
+          <Heading size={17} color={MS.color.inkSoft} style={{ marginTop: 3 }}>Grow one small habit</Heading>
+          <Body size={10.5} color={MS.color.muted} style={{ marginTop: 4 }}>Choose a suggestion or plant your own.</Body>
+        </Pressable>
+        <Pressable onPress={() => router.push('/tidy-day' as never)} accessibilityRole="button" accessibilityLabel="Go to the Potting Table to play Tidy the Day" style={({ pressed }) => ({ flex: 1, minHeight: 218, borderRadius: MS.radius.xl, backgroundColor: '#DDECEF', padding: 16, overflow: 'hidden', transform: [{ scale: pressed ? 0.98 : 1 }] })}>
+          <View style={{ marginHorizontal: -16, marginTop: -16, borderTopLeftRadius: MS.radius.xl, borderTopRightRadius: MS.radius.xl, overflow: 'hidden' }}><PlaceVignette variant="potting" height={100} /></View>
+          <BodyBold size={9.5} color={MS.color.forestMuted} style={{ marginTop: 10 }}>THE POTTING TABLE</BodyBold>
+          <Heading size={17} color={MS.color.inkSoft} style={{ marginTop: 3 }}>Tidy the day</Heading>
+          <Body size={10.5} color={MS.color.muted} style={{ marginTop: 4 }}>Sort four thoughts with Bramble.</Body>
+        </Pressable>
+      </View>
+
       <View style={{ height: 1, backgroundColor: `${MS.color.ink}10`, marginVertical: 22 }} />
 
       <Pressable onPress={() => router.push('/support')} accessibilityRole="button" accessibilityLabel="Open support from real people and urgent resources" style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>

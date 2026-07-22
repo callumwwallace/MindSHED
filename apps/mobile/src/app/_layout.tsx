@@ -77,6 +77,8 @@ function NativeRootLayout() {
           <Stack.Screen name="insight-detail" />
           <Stack.Screen name="care-plan" />
           <Stack.Screen name="grounding" options={{ presentation: 'fullScreenModal' }} />
+          <Stack.Screen name="nursery" />
+          <Stack.Screen name="tidy-day" options={{ presentation: 'fullScreenModal' }} />
           <Stack.Screen name="history" />
         </Stack>
         <LifecycleGate />

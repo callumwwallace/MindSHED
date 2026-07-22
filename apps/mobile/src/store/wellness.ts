@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 import { flushLocalPrivateStorageWrites, localPrivateStorage } from '@/lib/local-private-storage';
 import { scoreSwemwbs } from '@/lib/swemwbs';
+import type { Habit, HabitRhythm } from '@/lib/habits';
 
 // Local-first private state. Research-eligible structured events are copied to
 // the separate encrypted pilot queue; free text never leaves this store.
@@ -103,6 +104,7 @@ interface WellnessState {
     supportName: string;
     supportContact: string;
   };
+  habits: Habit[];
   ensureToday: () => void;
   submitCheckin: (c: Omit<Checkin, 'date'>) => void;
   toggleTask: (id: string) => void;
@@ -123,6 +125,10 @@ interface WellnessState {
   setAmbientSound: (enabled: boolean) => void;
   setHapticsEnabled: (enabled: boolean) => void;
   setCarePlan: (carePlan: WellnessState['carePlan']) => void;
+  addHabit: (title: string, tinyVersion: string, rhythm: HabitRhythm) => void;
+  toggleHabitToday: (id: string) => void;
+  setHabitPaused: (id: string, paused: boolean) => void;
+  removeHabit: (id: string) => void;
   setHasHydrated: (hasHydrated: boolean) => void;
   recordConsent: (choices: {
     researchConsent: boolean;
@@ -168,6 +174,7 @@ export const useWellness = create<WellnessState>()(
         supportName: '',
         supportContact: '',
       },
+      habits: [],
 
       ensureToday: () => {
         if (get().tasksDate !== todayKey()) {
@@ -256,6 +263,36 @@ export const useWellness = create<WellnessState>()(
       setAmbientSound: (ambientSound) => set({ ambientSound }),
       setHapticsEnabled: (hapticsEnabled) => set({ hapticsEnabled }),
       setCarePlan: (carePlan) => set({ carePlan }),
+      addHabit: (title, tinyVersion, rhythm) => {
+        if (get().habits.length >= 3) return;
+        set({
+          habits: [
+            ...get().habits,
+            {
+              id: `habit-${Date.now()}`,
+              title: title.trim(),
+              tinyVersion: tinyVersion.trim(),
+              rhythm,
+              createdAt: new Date().toISOString(),
+              completions: [],
+              paused: false,
+            },
+          ],
+        });
+      },
+      toggleHabitToday: (id) => {
+        const today = todayKey();
+        set({
+          habits: get().habits.map((habit) => habit.id !== id ? habit : {
+            ...habit,
+            completions: habit.completions.includes(today)
+              ? habit.completions.filter((date) => date !== today)
+              : [...habit.completions, today],
+          }),
+        });
+      },
+      setHabitPaused: (id, paused) => set({ habits: get().habits.map((habit) => habit.id === id ? { ...habit, paused } : habit) }),
+      removeHabit: (id) => set({ habits: get().habits.filter((habit) => habit.id !== id) }),
       setHasHydrated: (hasHydrated) => set({ hasHydrated }),
       recordConsent: ({ researchConsent, healthDataConsent, marketingConsent }) => {
         const now = new Date().toISOString();
@@ -297,12 +334,13 @@ export const useWellness = create<WellnessState>()(
         ambientSound: false,
         hapticsEnabled: true,
         carePlan: { warningSigns: '', helps: '', supportName: '', supportContact: '' },
+        habits: [],
       }),
     }),
     {
       name: 'mindshed-wellness',
       storage: createJSONStorage(() => localPrivateStorage),
-      version: 6,
+      version: 7,
       partialize: ({ hasHydrated: _hasHydrated, ...state }) => state,
       onRehydrateStorage: () => (state) => {
         if (state) state.setHasHydrated(true);
@@ -329,6 +367,7 @@ export const useWellness = create<WellnessState>()(
           healthConnected: previous.healthConnected ?? false,
           healthDailySummaries: previous.healthDailySummaries ?? [],
           healthLastSyncedAt: previous.healthLastSyncedAt,
+          habits: previous.habits ?? [],
         } as WellnessState;
       },
     },

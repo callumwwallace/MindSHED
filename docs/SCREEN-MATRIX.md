@@ -40,6 +40,8 @@ physical iOS/Android evidence; **approval gate** deliberately remains disabled;
 | Journal create, history, edit, delete and sleeping Bramble shed scene | Ready |
 | Activities filter, add, already-added and remove | Ready |
 | Untimed 5–4–3–2–1 grounding and early exit | Ready |
+| Illustrated Nursery with ready-made or custom habits, smallest-version fallback, flexible rhythm, pause/remove and seven-day return record | Ready; guided one-decision-at-a-time setup, local-only, and deliberately has no streak loss |
+| Illustrated Tidy the Day introduction, four-thought sorting game, undo and completion summary | Ready; three plain-language baskets with no timer, score or correct answer |
 | Support call/SMS/email and device-unavailable handling | Ready; physical-device QA remains |
 | Soundscape library/player | Excluded; old links show an honest unavailable state |
 

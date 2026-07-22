@@ -5,7 +5,7 @@ import Svg, { Circle, Defs, Ellipse, G, LinearGradient, Path, Rect, Stop } from 
 import { AnimatedBramble } from './animated-bramble';
 import { SleepingBrambleNest } from './sleeping-bramble-nest';
 
-type PlaceVariant = 'bench' | 'shed' | 'gate' | 'path';
+type PlaceVariant = 'bench' | 'shed' | 'gate' | 'path' | 'nursery' | 'potting';
 
 function BenchVignette() {
   return (
@@ -97,6 +97,49 @@ function PathVignette() {
   );
 }
 
+function NurseryVignette() {
+  return (
+    <Svg width="100%" height="100%" viewBox="0 0 180 100" preserveAspectRatio="xMidYMid slice">
+      <Rect width="180" height="100" fill="#CAE6DE" />
+      <Circle cx="149" cy="19" r="12" fill="#F3D789" />
+      <Path d="M0 51 Q43 31 88 48 Q132 28 180 47 V100 H0 Z" fill="#94B58B" />
+      <Path d="M15 91 V34 Q15 10 42 10 H117 Q144 10 144 34 V91" fill="#EAF3DE" fillOpacity="0.38" stroke="#55735F" strokeWidth="5" />
+      <Path d="M80 11 V91 M17 37 H143" stroke="#688873" strokeWidth="2.5" opacity="0.75" />
+      <Path d="M9 83 Q47 72 87 83 Q127 71 166 82 V100 H9 Z" fill="#7A5A3E" />
+      <Path d="M17 83 Q48 77 77 84 M95 83 Q125 76 157 83" fill="none" stroke="#B7895E" strokeWidth="5" strokeLinecap="round" />
+      <G stroke="#496C50" strokeWidth="2" strokeLinecap="round">
+        <Path d="M45 80 V62 M72 82 V67 M116 81 V60 M141 82 V69" />
+      </G>
+      <G fill="#6F9A67">
+        <Ellipse cx="39" cy="65" rx="8" ry="4" transform="rotate(-25 39 65)" /><Ellipse cx="51" cy="66" rx="8" ry="4" transform="rotate(25 51 66)" />
+        <Ellipse cx="67" cy="70" rx="6" ry="3" transform="rotate(-28 67 70)" /><Ellipse cx="77" cy="71" rx="6" ry="3" transform="rotate(28 77 71)" />
+        <Ellipse cx="109" cy="63" rx="8" ry="4" transform="rotate(-27 109 63)" /><Ellipse cx="122" cy="64" rx="8" ry="4" transform="rotate(27 122 64)" />
+        <Ellipse cx="136" cy="71" rx="6" ry="3" transform="rotate(-25 136 71)" /><Ellipse cx="146" cy="72" rx="6" ry="3" transform="rotate(25 146 72)" />
+      </G>
+    </Svg>
+  );
+}
+
+function PottingVignette() {
+  return (
+    <Svg width="100%" height="100%" viewBox="0 0 180 100" preserveAspectRatio="xMidYMid slice">
+      <Rect width="180" height="100" fill="#CFE6E8" />
+      <Path d="M0 49 Q45 30 89 47 Q135 28 180 45 V100 H0 Z" fill="#91AD8B" />
+      <Path d="M0 72 Q43 57 84 68 Q134 52 180 67 V100 H0 Z" fill="#AFC798" />
+      <Path d="M21 58 H159 V68 H21 Z M31 67 H39 V100 H31 Z M141 67 H149 V100 H141 Z" fill="#805B40" />
+      <Path d="M24 55 Q91 48 157 55 V64 H24 Z" fill="#B58458" stroke="#674A37" strokeWidth="2" />
+      <G>
+        <Path d="M44 37 H69 L66 55 H47 Z" fill="#C77E59" /><Path d="M42 34 H71 V40 H42 Z" fill="#A96448" />
+        <Path d="M107 39 H130 L127 55 H110 Z" fill="#D6AA69" /><Path d="M105 36 H132 V42 H105 Z" fill="#A77C4C" />
+        <Path d="M56 34 V23" stroke="#4D7454" strokeWidth="2" /><Ellipse cx="50" cy="25" rx="8" ry="4" fill="#719B68" transform="rotate(-24 50 25)" /><Ellipse cx="62" cy="24" rx="8" ry="4" fill="#719B68" transform="rotate(24 62 24)" />
+        <Path d="M118 37 V28" stroke="#4D7454" strokeWidth="2" /><Ellipse cx="112" cy="29" rx="7" ry="3.5" fill="#719B68" transform="rotate(-24 112 29)" /><Ellipse cx="124" cy="29" rx="7" ry="3.5" fill="#719B68" transform="rotate(24 124 29)" />
+      </G>
+      <Path d="M67 78 H112 V92 H67 Z" fill="#D7C58F" stroke="#816E4D" strokeWidth="2" /><Path d="M89 78 V92" stroke="#816E4D" strokeWidth="2" />
+      <Circle cx="78" cy="84" r="2.5" fill="#6E8E62" /><Circle cx="101" cy="86" r="2.5" fill="#6E8E62" />
+    </Svg>
+  );
+}
+
 export function PlaceVignette({
   variant,
   height = 92,
@@ -119,6 +162,8 @@ export function PlaceVignette({
         {variant === 'shed' && <ShedVignette />}
         {variant === 'gate' && <GateVignette />}
         {variant === 'path' && <PathVignette />}
+        {variant === 'nursery' && <NurseryVignette />}
+        {variant === 'potting' && <PottingVignette />}
       </View>
       {showBramble && variant === 'bench' && (
         <View style={{ position: 'absolute', left: Math.min(width * 0.43, Math.max(8, width - size - 8)), bottom: 3 }}>
@@ -138,6 +183,16 @@ export function PlaceVignette({
       {showBramble && variant === 'path' && (
         <View style={{ position: 'absolute', right: 0, bottom: 1 }}>
           <AnimatedBramble size={size} state="notice" mood="calm" />
+        </View>
+      )}
+      {showBramble && variant === 'nursery' && (
+        <View style={{ position: 'absolute', right: 3, bottom: 1 }}>
+          <AnimatedBramble size={size} state="plant" mood="happy" />
+        </View>
+      )}
+      {showBramble && variant === 'potting' && (
+        <View style={{ position: 'absolute', right: 2, bottom: 1 }}>
+          <AnimatedBramble size={size} state="notice" mood="calm" style={{ transform: [{ scaleX: -1 }] }} />
         </View>
       )}
     </View>

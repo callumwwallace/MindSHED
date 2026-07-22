@@ -1,6 +1,7 @@
 import Feather from '@expo/vector-icons/Feather';
 import { router } from 'expo-router';
-import { Pressable, ScrollView, View } from 'react-native';
+import { useState } from 'react';
+import { Pressable, ScrollView, useWindowDimensions, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Circle, Defs, Ellipse, G, LinearGradient, Path, Rect, Stop } from 'react-native-svg';
 
@@ -70,7 +71,7 @@ function takeaway(checkins: Checkin[], health: HealthDailySummary[]) {
 
 function PondBackdrop() {
   return (
-    <Svg width="100%" height="100%" viewBox="0 0 390 680" preserveAspectRatio="xMidYMid slice">
+    <Svg width="100%" height="100%" viewBox="0 0 390 680" preserveAspectRatio="xMidYMin slice">
       <Defs>
         <LinearGradient id="sceneSky" x1="0" y1="0" x2="0" y2="1">
           <Stop offset="0" stopColor="#C8E4E3" />
@@ -118,13 +119,13 @@ function PondBackdrop() {
   );
 }
 
-function WeeklyChart({ days }: { days: WeekDay[] }) {
+function WeeklyChart({ days, onHeight }: { days: WeekDay[]; onHeight: (height: number) => void }) {
   const recorded = days.filter((day) => day.checkin).length;
   const summary = weeklySummary(days);
   const segments = chartSegments(days);
 
   return (
-    <View style={{ position: 'absolute', left: 15, right: 15, bottom: 0, borderRadius: 27, backgroundColor: 'rgba(255,253,246,0.96)', paddingTop: 14, paddingHorizontal: 16, paddingBottom: 11, shadowColor: '#294638', shadowOpacity: 0.13, shadowRadius: 18, shadowOffset: { width: 0, height: 8 }, elevation: 5 }}>
+    <View onLayout={({ nativeEvent }) => onHeight(Math.ceil(nativeEvent.layout.height))} style={{ position: 'absolute', left: 15, right: 15, bottom: 0, borderRadius: 27, backgroundColor: 'rgba(255,253,246,0.96)', paddingTop: 14, paddingHorizontal: 16, paddingBottom: 11, shadowColor: '#294638', shadowOpacity: 0.13, shadowRadius: 18, shadowOffset: { width: 0, height: 8 }, elevation: 5, transform: [{ translateY: 18 }] }}>
       <View style={{ flexDirection: 'row', alignItems: 'center' }}>
         <View style={{ flex: 1 }}>
           <BodyBold size={9.5} color={MS.color.forestMuted}>LAST SEVEN DAYS</BodyBold>
@@ -135,8 +136,8 @@ function WeeklyChart({ days }: { days: WeekDay[] }) {
         </View>
       </View>
 
-      <View style={{ marginTop: 4 }}>
-        <Svg width="100%" height={88} viewBox="0 0 320 112">
+      <View style={{ marginTop: 5 }}>
+        <Svg width="100%" height={94} viewBox="0 0 320 112">
           <Path d="M12 25 H308 M12 54 H308 M12 83 H308" stroke="#315B45" strokeWidth="1" opacity="0.08" />
           {segments.map((segment, index) => segment.length > 1 && <Path key={`segment-${index}`} d={segment.map((point, pointIndex) => `${pointIndex ? 'L' : 'M'} ${point.x} ${point.y}`).join(' ')} stroke="#315B45" strokeWidth="3.2" fill="none" strokeLinecap="round" strokeLinejoin="round" />)}
           {days.map((day, index) => {
@@ -149,7 +150,7 @@ function WeeklyChart({ days }: { days: WeekDay[] }) {
             );
           })}
         </Svg>
-        <View style={{ flexDirection: 'row', marginTop: -13 }}>
+        <View style={{ flexDirection: 'row', marginTop: -15 }}>
           {days.map((day) => <BodyBold key={day.key} size={8.5} color={day.checkin ? MS.color.forest : MS.color.faint} style={{ flex: 1, textAlign: 'center' }}>{day.date.toLocaleDateString('en-GB', { weekday: 'narrow' })}</BodyBold>)}
         </View>
       </View>
@@ -171,19 +172,26 @@ function WeeklyChart({ days }: { days: WeekDay[] }) {
 }
 
 function PondScene({ days, message }: { days: WeekDay[]; message: string }) {
+  const { height: windowHeight, width: windowWidth } = useWindowDimensions();
+  const [chartHeight, setChartHeight] = useState(210);
+  const sceneHeight = Math.max(590, Math.min(685, windowHeight - 176));
+  const brambleSize = windowWidth < 375 ? 92 : 104;
+
   return (
-    <View style={{ height: 613, marginHorizontal: -17, marginTop: 5, overflow: 'hidden' }}>
+    <View style={{ height: sceneHeight, marginHorizontal: -17, marginTop: 2, overflow: 'visible' }}>
       <PondBackdrop />
-      <View style={{ position: 'absolute', left: 22, top: 268, width: 90, height: 92, justifyContent: 'flex-end' }}>
-        <View style={{ position: 'absolute', left: 12, bottom: 4, width: 70, height: 11, borderRadius: 50, backgroundColor: 'rgba(37,64,43,0.22)' }} />
-        <AnimatedBramble size={84} state="listen" mood="calm" />
+      <View style={{ position: 'absolute', left: 18, right: 18, bottom: chartHeight + 16, flexDirection: 'row', alignItems: 'flex-end', gap: 6 }}>
+        <View style={{ width: brambleSize, height: brambleSize + 8, justifyContent: 'flex-end' }}>
+          <View style={{ position: 'absolute', left: 12, right: 8, bottom: 4, height: 12, borderRadius: 50, backgroundColor: 'rgba(37,64,43,0.22)' }} />
+          <AnimatedBramble size={brambleSize} state="listen" mood="calm" />
+        </View>
+        <View style={{ flex: 1, maxWidth: 230, marginBottom: 10, borderRadius: 20, backgroundColor: 'rgba(255,253,246,0.92)', borderWidth: 1, borderColor: 'rgba(49,91,69,0.1)', paddingHorizontal: 14, paddingVertical: 10 }}>
+          <BodyBold size={9} color={MS.color.forestMuted}>BRAMBLE NOTICED</BodyBold>
+          <CharacterText size={12.5} color={MS.color.inkSoft} style={{ marginTop: 4, lineHeight: 17 }}>{message}</CharacterText>
+          <View style={{ position: 'absolute', left: -7, bottom: 16, width: 14, height: 14, backgroundColor: 'rgba(255,253,246,0.92)', borderLeftWidth: 1, borderBottomWidth: 1, borderColor: 'rgba(49,91,69,0.1)', transform: [{ rotate: '45deg' }] }} />
+        </View>
       </View>
-      <View style={{ position: 'absolute', right: 18, top: 265, width: 224, borderRadius: 20, backgroundColor: 'rgba(255,253,246,0.9)', paddingHorizontal: 14, paddingVertical: 10 }}>
-        <BodyBold size={9} color={MS.color.forestMuted}>BRAMBLE NOTICED</BodyBold>
-        <CharacterText size={12.5} color={MS.color.inkSoft} style={{ marginTop: 4, lineHeight: 17 }}>{message}</CharacterText>
-        <View style={{ position: 'absolute', left: -7, bottom: 16, width: 14, height: 14, backgroundColor: 'rgba(255,253,246,0.9)', transform: [{ rotate: '45deg' }] }} />
-      </View>
-      <WeeklyChart days={days} />
+      <WeeklyChart days={days} onHeight={setChartHeight} />
     </View>
   );
 }
