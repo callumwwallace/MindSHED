@@ -6,6 +6,11 @@ import { assertProductionConfiguration, pilotRuntimeConfig } from "./config";
 const managedVariables = [
   "NODE_ENV",
   "DATABASE_URL",
+  "DATABASE_HOST",
+  "DATABASE_PORT",
+  "DATABASE_NAME",
+  "DATABASE_USERNAME",
+  "DATABASE_PASSWORD",
   "DATABASE_SSL_MODE",
   "PILOT_CODE_HASH_KEY",
   "PILOT_LEGAL_DOCUMENTS_APPROVED",
@@ -64,6 +69,21 @@ test("a complete fail-closed production configuration is accepted", () => {
     PILOT_CODE_HASH_KEY: "0123456789abcdef".repeat(4),
     PILOT_MINIMUM_APP_VERSION: "1.0.0",
     CORS_ORIGIN: "https://pilot.example",
+  }, () => {
+    assert.doesNotThrow(assertProductionConfiguration);
+  });
+});
+
+test("managed database credentials are accepted without assembling a secret URL", () => {
+  withEnvironment({
+    NODE_ENV: "production",
+    DATABASE_HOST: "db.internal",
+    DATABASE_PORT: "5432",
+    DATABASE_NAME: "mindshed",
+    DATABASE_USERNAME: "mindshed_admin",
+    DATABASE_PASSWORD: "secret-from-a-managed-store",
+    DATABASE_SSL_MODE: "verify-full",
+    PILOT_CODE_HASH_KEY: "0123456789abcdef".repeat(4),
   }, () => {
     assert.doesNotThrow(assertProductionConfiguration);
   });

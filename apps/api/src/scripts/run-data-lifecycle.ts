@@ -173,7 +173,7 @@ export async function runDataLifecycle(options: DataLifecycleOptions): Promise<D
   });
 }
 
-async function main() {
+export async function runDataLifecycleFromEnvironment(): Promise<void> {
   const result = await runDataLifecycle({
     execute: process.env.PILOT_LIFECYCLE_EXECUTE === "true",
     studyCode: process.env.PILOT_LIFECYCLE_STUDY_CODE,
@@ -184,11 +184,10 @@ async function main() {
   process.stdout.write(`${JSON.stringify(result, null, 2)}\n`);
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) {
-  main()
-    .catch((error) => {
-      process.stderr.write(`${error instanceof Error ? error.message : "Data lifecycle failed"}\n`);
-      process.exitCode = 1;
-    })
-    .finally(closeDb);
+export async function runDataLifecycleFromEnvironmentAndClose(): Promise<void> {
+  try {
+    await runDataLifecycleFromEnvironment();
+  } finally {
+    await closeDb();
+  }
 }

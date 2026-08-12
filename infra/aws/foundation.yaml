@@ -1,0 +1,58 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: MindSHED pilot container registry. Deploy this before the service stack.
+
+Parameters:
+  ProjectName:
+    Type: String
+    Default: mindshed
+    AllowedPattern: "^[a-z][a-z0-9-]{2,24}$"
+  EnvironmentName:
+    Type: String
+    Default: pilot
+    AllowedPattern: "^[a-z][a-z0-9-]{1,15}$"
+
+Resources:
+  ApiRepository:
+    Type: AWS::ECR::Repository
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      RepositoryName: !Sub "${ProjectName}-${EnvironmentName}-api"
+      EmptyOnDelete: false
+      EncryptionConfiguration:
+        EncryptionType: AES256
+      ImageScanningConfiguration:
+        ScanOnPush: true
+      ImageTagMutability: IMMUTABLE
+      LifecyclePolicy:
+        LifecyclePolicyText: |
+          {
+            "rules": [
+              {
+                "rulePriority": 1,
+                "description": "Remove untagged images after seven days",
+                "selection": {
+                  "tagStatus": "untagged",
+                  "countType": "sinceImagePushed",
+                  "countUnit": "days",
+                  "countNumber": 7
+                },
+                "action": { "type": "expire" }
+              }
+            ]
+          }
+      Tags:
+        - Key: Project
+          Value: !Ref ProjectName
+        - Key: Environment
+          Value: !Ref EnvironmentName
+        - Key: DataClassification
+          Value: no-participant-data
+
+Outputs:
+  RepositoryArn:
+    Value: !GetAtt ApiRepository.Arn
+  RepositoryUri:
+    Value: !GetAtt ApiRepository.RepositoryUri
+  RepositoryName:
+    Value: !Ref ApiRepository

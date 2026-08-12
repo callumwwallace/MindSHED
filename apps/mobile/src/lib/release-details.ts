@@ -1,5 +1,6 @@
 export const RELEASE_DETAILS = {
   controllerAddress: process.env.EXPO_PUBLIC_DATA_CONTROLLER_ADDRESS?.trim() ?? '',
+  controllerCompanyNumber: process.env.EXPO_PUBLIC_DATA_CONTROLLER_COMPANY_NUMBER?.trim() ?? '',
   controllerName: process.env.EXPO_PUBLIC_DATA_CONTROLLER_NAME?.trim() ?? '',
   icoRegistration: process.env.EXPO_PUBLIC_ICO_REGISTRATION?.trim() ?? '',
   privacyEmail: process.env.EXPO_PUBLIC_PRIVACY_EMAIL?.trim() ?? '',

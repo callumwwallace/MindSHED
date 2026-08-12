@@ -1,8 +1,17 @@
 # MindSHED app-store release checklist
 
-Updated: 21 July 2026
+Updated: 11 August 2026
 Current outcome: **not ready to submit**; engineering safeguards are in place,
 but the external and store-owned gates below are open.
+
+The operational owner checklist is in
+[`PILOT-RELEASE-ACTIONS.md`](./PILOT-RELEASE-ACTIONS.md). The verified company
+identity is **MINDSHED WELLNESS LTD**, company number **17314926**; controller
+roles, contact address and ICO details still require approval.
+
+The AWS ethics amendment, pseudonymisation model and required hosting controls
+are recorded in
+[`AWS-ETHICS-HOSTING-AMENDMENT-NOTES.md`](./AWS-ETHICS-HOSTING-AMENDMENT-NOTES.md).
 
 ## Repository-complete controls
 
@@ -43,6 +52,7 @@ are embedded and must never contain secrets.
 - [ ] `EXPO_PUBLIC_SUPPORT_EMAIL`, `EXPO_PUBLIC_PRIVACY_EMAIL`,
   `EXPO_PUBLIC_RESEARCH_EMAIL` — monitored and verified.
 - [ ] `EXPO_PUBLIC_DATA_CONTROLLER_NAME`,
+  `EXPO_PUBLIC_DATA_CONTROLLER_COMPANY_NUMBER`,
   `EXPO_PUBLIC_DATA_CONTROLLER_ADDRESS`, `EXPO_PUBLIC_ICO_REGISTRATION`.
 - [ ] `EAS_PROJECT_ID` and `EAS_OWNER` — organisation-owned.
 - [ ] SWEMWBS and marketing flags set only to the independently approved state.

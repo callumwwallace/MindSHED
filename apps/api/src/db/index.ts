@@ -10,15 +10,34 @@ let _client: ReturnType<typeof postgres> | null = null;
 const REQUIRED_MIGRATION_CREATED_AT = 1784659225433;
 
 function create() {
-  const url = process.env.DATABASE_URL;
-  if (!url) throw new Error("DATABASE_URL is not set");
   const { databaseSslMode } = pilotRuntimeConfig();
-  _client = postgres(url, {
+  const sharedOptions = {
     connect_timeout: 10,
     idle_timeout: 20,
     max: 10,
     ssl: databaseSslMode === "disable" ? false : databaseSslMode,
-  });
+  } as const;
+  const url = process.env.DATABASE_URL?.trim();
+  if (url) {
+    _client = postgres(url, sharedOptions);
+  } else {
+    const host = process.env.DATABASE_HOST?.trim();
+    const database = process.env.DATABASE_NAME?.trim();
+    const username = process.env.DATABASE_USERNAME?.trim();
+    const password = process.env.DATABASE_PASSWORD;
+    const port = Number(process.env.DATABASE_PORT);
+    if (!host || !database || !username || !password || !Number.isInteger(port)) {
+      throw new Error("Set DATABASE_URL or every managed database connection variable");
+    }
+    _client = postgres({
+      ...sharedOptions,
+      host,
+      port,
+      database,
+      username,
+      password,
+    });
+  }
   return drizzle(_client, { schema });
 }
 

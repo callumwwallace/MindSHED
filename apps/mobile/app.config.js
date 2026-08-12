@@ -56,6 +56,7 @@ function validateProduction() {
 
   for (const name of [
     'EXPO_PUBLIC_DATA_CONTROLLER_NAME',
+    'EXPO_PUBLIC_DATA_CONTROLLER_COMPANY_NUMBER',
     'EXPO_PUBLIC_DATA_CONTROLLER_ADDRESS',
     'EXPO_PUBLIC_ICO_REGISTRATION',
   ]) required(name);

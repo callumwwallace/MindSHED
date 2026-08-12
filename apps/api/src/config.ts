@@ -33,11 +33,30 @@ export function assertProductionConfiguration(): void {
 
   const config = pilotRuntimeConfig();
   const problems: string[] = [];
-  try {
-    const databaseUrl = new URL(process.env.DATABASE_URL ?? "");
-    if (!["postgres:", "postgresql:"].includes(databaseUrl.protocol)) throw new Error();
-  } catch {
-    problems.push("DATABASE_URL must be a valid PostgreSQL URL");
+  const databaseUrl = process.env.DATABASE_URL?.trim();
+  if (databaseUrl) {
+    try {
+      const parsed = new URL(databaseUrl);
+      if (!["postgres:", "postgresql:"].includes(parsed.protocol)) throw new Error();
+    } catch {
+      problems.push("DATABASE_URL must be a valid PostgreSQL URL");
+    }
+  } else {
+    const missingDatabaseParts = [
+      "DATABASE_HOST",
+      "DATABASE_PORT",
+      "DATABASE_NAME",
+      "DATABASE_USERNAME",
+      "DATABASE_PASSWORD",
+    ].filter((name) => !process.env[name]?.trim());
+    if (missingDatabaseParts.length) {
+      problems.push(`Set DATABASE_URL or every managed database variable (${missingDatabaseParts.join(", ")} missing)`);
+    } else {
+      const port = Number(process.env.DATABASE_PORT);
+      if (!Number.isInteger(port) || port < 1 || port > 65535) {
+        problems.push("DATABASE_PORT must be a valid TCP port");
+      }
+    }
   }
   if (config.databaseSslMode === "disable") problems.push("DATABASE_SSL_MODE must be require or verify-full");
   const hashKey = process.env.PILOT_CODE_HASH_KEY ?? "";

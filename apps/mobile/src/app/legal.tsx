@@ -61,7 +61,7 @@ const pages: Record<'privacy' | 'terms' | 'pilot' | 'contact', LegalPage> = {
     sections: [
       ['App support', RELEASE_DETAILS.supportEmail || 'Production support email not configured.'],
       ['Privacy contact', RELEASE_DETAILS.privacyEmail
-        ? `${RELEASE_DETAILS.controllerName} · ${RELEASE_DETAILS.controllerAddress} · ${RELEASE_DETAILS.privacyEmail} · ICO ${RELEASE_DETAILS.icoRegistration}`
+        ? `${RELEASE_DETAILS.controllerName} · Company ${RELEASE_DETAILS.controllerCompanyNumber} · ${RELEASE_DETAILS.controllerAddress} · ${RELEASE_DETAILS.privacyEmail} · ICO ${RELEASE_DETAILS.icoRegistration}`
         : 'Controller, postal address, privacy email and ICO registration not configured.'],
       ['Research team', RELEASE_DETAILS.researchEmail || 'Production research contact not configured.'],
     ],
