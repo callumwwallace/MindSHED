@@ -31,7 +31,7 @@
     "fastify": "^5.11.3",
     "postgres": "^3.4.9",
     "superjson": "^2.2.6",
-    "zod": "^3.25.76"
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "@trpc/client": "^11.18.0",
