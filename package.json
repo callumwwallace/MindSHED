@@ -8,6 +8,7 @@
   ],
   "scripts": {
     "api": "npm run dev --workspace @mindshed/api",
+    "audit:production": "node scripts/audit-production.mjs",
     "db:up": "docker compose up -d --wait postgres",
     "db:down": "docker compose down",
     "mobile": "npm run start --workspace mobile",

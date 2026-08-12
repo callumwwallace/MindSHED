@@ -95,7 +95,7 @@
           "background": false
         }
       ],
-      "expo-health-connect",
+      "react-native-health-connect",
       "./plugins/with-health-connect-main-activity",
       "./plugins/with-android-private-data",
       [
