@@ -1,8 +1,9 @@
 import Feather from '@expo/vector-icons/Feather';
 import { PILOT_SCHEMA_VERSION } from '@mindshed/shared';
+import * as Device from 'expo-device';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { Pressable, ScrollView, TextInput, View } from 'react-native';
+import { Platform, Pressable, ScrollView, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { AnimatedBramble } from '@/components/ms/animated-bramble';
@@ -10,6 +11,7 @@ import { PillButton } from '@/components/ms/pill-button';
 import { Body, BodyBold, CharacterText, Display, Heading } from '@/components/ms/text';
 import { MS } from '@/constants/mindshed';
 import { configureDailyNudge } from '@/lib/daily-nudge';
+import { canUseLocalPilotCode } from '@/lib/development-access';
 import { LEGAL_DOCUMENTS_APPROVED } from '@/lib/legal-readiness';
 import { goBackOrReplace } from '@/lib/navigation';
 import { getPilotIdentity, setPilotIdentity } from '@/lib/pilot-identity';
@@ -39,6 +41,13 @@ export default function OnboardingScreen() {
   const pilotConfig = trpc.pilot.config.useQuery(undefined, { retry: 1 });
   const legalLocked = !__DEV__ && !LEGAL_DOCUMENTS_APPROVED;
   const enrolmentPaused = pilotConfig.data?.enrolmentOpen === false || legalLocked;
+  const localPilotCode = process.env.EXPO_PUBLIC_LOCAL_PILOT_CODE;
+  const showLocalPilotCode = canUseLocalPilotCode({
+    isDevelopment: __DEV__,
+    isPhysicalDevice: Device.isDevice,
+    platform: Platform.OS,
+    code: localPilotCode,
+  });
 
   useEffect(() => {
     if (step !== 0 || onboardingComplete) return;
@@ -99,7 +108,7 @@ export default function OnboardingScreen() {
           <View style={{ flexDirection: 'row', gap: 16, marginTop: 10 }}><Pressable onPress={() => router.push({ pathname: '/privacy', params: { notice: '1' } })} accessibilityRole="link"><BodyBold size={10.5} color={MS.color.forest}>Privacy notice</BodyBold></Pressable><Pressable onPress={() => router.push('/legal')} accessibilityRole="link"><BodyBold size={10.5} color={MS.color.forest}>Terms and boundaries</BodyBold></Pressable></View>
           {enrolmentPaused && <View accessibilityRole="alert" style={{ flexDirection: 'row', gap: 8, marginTop: 10 }}><Feather name="pause-circle" size={15} color={MS.color.forestMuted} /><Body size={11} color={MS.color.forestMuted} style={{ flex: 1 }}>{legalLocked ? 'Pilot enrollment is locked until the final legal documents receive written approval.' : 'Pilot enrollment is currently paused. The local wellbeing app remains available to existing participants.'}</Body></View>}
           {!!error && <View style={{ flexDirection: 'row', gap: 8, marginTop: 10 }}><Feather name="alert-circle" size={15} color={MS.color.danger} /><Body size={11} color={MS.color.danger} style={{ flex: 1 }}>{error}</Body></View>}
-          {__DEV__ && process.env.EXPO_PUBLIC_LOCAL_PILOT_CODE && <Pressable onPress={() => setInvite(process.env.EXPO_PUBLIC_LOCAL_PILOT_CODE ?? '')} accessibilityRole="button" style={{ alignSelf: 'flex-start', marginTop: 10, paddingVertical: 6 }}><BodyBold size={10.5} color={MS.color.forest}>Use local development code</BodyBold></Pressable>}
+          {showLocalPilotCode && <Pressable onPress={() => setInvite(localPilotCode ?? '')} accessibilityRole="button" style={{ alignSelf: 'flex-start', marginTop: 10, paddingVertical: 6 }}><BodyBold size={10.5} color={MS.color.forest}>Use local development code</BodyBold></Pressable>}
           <PillButton label={enrolPilot.isPending ? 'Verifying securely…' : enrolmentPaused ? 'Enrolment paused' : 'Continue'} onPress={checkInvite} disabled={!invite.trim() || !entryNoticeRead || enrolPilot.isPending || enrolmentPaused} style={{ marginTop: 20 }} />
         </View>
       )}

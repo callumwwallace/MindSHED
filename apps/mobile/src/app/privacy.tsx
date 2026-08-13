@@ -7,6 +7,7 @@ import { SettingsRow } from '@/components/ms/settings-row';
 import { SettingsSection } from '@/components/ms/settings-section';
 import { Body, BodyBold, Heading } from '@/components/ms/text';
 import { MS } from '@/constants/mindshed';
+import { LEGAL_DOCUMENTS_APPROVED } from '@/lib/legal-readiness';
 import { useWellness } from '@/store/wellness';
 
 export default function PrivacyScreen() {
@@ -53,7 +54,7 @@ export default function PrivacyScreen() {
         <BodyBold size={10} color={MS.color.inkSoft}>PSEUDONYMOUS, NOT ABSOLUTELY ANONYMOUS</BodyBold>
         <Body size={10.5} color={MS.color.muted} style={{ marginTop: 4 }}>A random participant number links your approved pilot events together. It is never mapped to your name by MindSHED, but it remains personal data until an approved irreversible anonymisation step.</Body>
       </View>
-      <Body size={10.5} color={MS.color.faint} style={{ textAlign: 'center', marginTop: 20 }}>Production consent remains blocked until the controller, processor, hosting region, retention schedule and contact details receive written approval.</Body>
+      {!LEGAL_DOCUMENTS_APPROVED && <Body size={10.5} color={MS.color.faint} style={{ textAlign: 'center', marginTop: 20 }}>Production consent remains blocked until the controller, processor, hosting region, retention schedule and contact details receive written approval.</Body>}
     </ScrollView>
   );
 }

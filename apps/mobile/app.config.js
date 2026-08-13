@@ -1,5 +1,7 @@
 const PRODUCTION_PROFILE = process.env.EAS_BUILD_PROFILE === 'production'
   || process.env.MINDSHED_VALIDATE_PRODUCTION === 'true';
+const DISTRIBUTABLE_PROFILE = PRODUCTION_PROFILE
+  || process.env.EAS_BUILD_PROFILE === 'preview';
 
 function required(name) {
   const value = process.env[name]?.trim();
@@ -65,6 +67,9 @@ function validateProduction() {
 }
 
 module.exports = ({ config }) => {
+  if (DISTRIBUTABLE_PROFILE && process.env.EXPO_PUBLIC_LOCAL_PILOT_CODE?.trim()) {
+    throw new Error('Distributable mobile builds must not define EXPO_PUBLIC_LOCAL_PILOT_CODE.');
+  }
   const production = PRODUCTION_PROFILE ? validateProduction() : null;
   const projectId = production?.projectId ?? process.env.EAS_PROJECT_ID;
   const owner = production?.owner ?? process.env.EAS_OWNER;

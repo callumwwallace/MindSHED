@@ -25,7 +25,7 @@ Parameters:
   AlertEmail:
     Type: String
     Description: Monitored address for AWS budget notifications.
-    AllowedPattern: "^[^@[:space:]]+@[^@[:space:]]+\\.[^@[:space:]]+$"
+    AllowedPattern: "^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$"
   ApiDesiredCount:
     Type: Number
     Default: 0
@@ -54,8 +54,9 @@ Parameters:
   BackupRetentionDays:
     Type: Number
     Default: 14
-    MinValue: 7
+    MinValue: 1
     MaxValue: 35
+    Description: Keep at 14 for the paid pilot; one day is allowed only for synthetic Free Plan prototypes.
   DatabaseDeletionProtection:
     Type: String
     Default: "true"

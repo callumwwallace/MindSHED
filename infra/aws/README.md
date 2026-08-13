@@ -7,6 +7,36 @@ the MindSHED pilot. It is designed to match the AWS ethics amendment notes in
 Creating these stacks incurs AWS charges. Preparing and reviewing the files
 does not create any AWS resources.
 
+## Temporary Free Plan prototype
+
+The synthetic prototype deployed on 13 August 2026 is available at
+`https://api.prototype.mindshedwellness.co.uk`. It uses the same London
+network, ECS, private encrypted PostgreSQL, KMS, Secrets Manager, HTTPS,
+CloudTrail and budget design intended for the paid pilot account, with these
+pilot-equivalent test controls:
+
+- legal approval is treated as complete for this test environment;
+- enrolment, research uploads, SWEMWBS uploads and the daily lifecycle job are
+  enabled so the complete participant journey can be exercised;
+- the configured lifecycle periods are 30 days for abandoned enrolments, 30
+  days after withdrawal and 365 days for active participant records;
+- only synthetic test data may be used despite the pilot-equivalent behavior;
+- the API runs as one small Fargate task;
+- the monthly AWS budget is USD 25; and
+- automated RDS backup retention is one day because the AWS Free Plan rejects
+  longer retention. The paid pilot must use the default 14 days or the final
+  controller-approved period.
+
+The API image pins AWS's official Europe (London) RDS root bundle and uses
+`verify-full`, so database TLS verifies both the certificate chain and RDS
+hostname. The local ignored `apps/mobile/.env` points development builds at
+this prototype endpoint.
+
+Do not treat this temporary account as the final research infrastructure. Move
+the deployment to the organisation-owned paid account, restore the 14-day
+backup period, repeat physical-device and recovery tests, and retain the
+approval evidence before accepting any participant data.
+
 ## Architecture
 
 - Amazon ECR stores immutable, scanned ARM64 API images.
@@ -83,6 +113,7 @@ export ENVIRONMENT_NAME=pilot
 export API_DOMAIN_NAME=api.example.org
 export HOSTED_ZONE_ID=Z123456789EXAMPLE
 export ALERT_EMAIL=operations@example.org
+export BACKUP_RETENTION_DAYS=14
 ```
 
 Leave every collection switch at its default `false`, then run:
@@ -99,6 +130,10 @@ API tasks, runs database migrations, scales the API to one task and verifies
 The first RDS and certificate deployment can take several minutes. Certificate
 creation will wait indefinitely if the specified Route 53 hosted zone is not
 authoritative for the API domain.
+
+For a synthetic-only AWS Free Plan account that rejects the paid-pilot backup
+period, set `BACKUP_RETENTION_DAYS=1`. Never carry that override into the paid
+pilot without explicit controller approval.
 
 ## One-time pilot invite code
 
