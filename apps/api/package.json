@@ -21,7 +21,7 @@
     "db:studio": "drizzle-kit studio"
   },
   "dependencies": {
-    "@aws-sdk/client-secrets-manager": "^3.1108.0",
+    "@aws-sdk/client-secrets-manager": "^3.1115.0",
     "@fastify/cors": "^11.3.0",
     "@fastify/helmet": "^13.1.0",
     "@fastify/rate-limit": "^11.1.0",
