@@ -23,20 +23,20 @@
   "dependencies": {
     "@aws-sdk/client-secrets-manager": "^3.1108.0",
     "@fastify/cors": "^11.3.0",
-    "@fastify/helmet": "^13.1.0",
+    "@fastify/helmet": "^13.1.1",
     "@fastify/rate-limit": "^11.1.0",
     "@mindshed/shared": "*",
-    "@trpc/server": "^11.18.0",
-    "drizzle-orm": "^0.45.2",
-    "fastify": "^5.11.3",
+    "@trpc/server": "^11.19.0",
+    "drizzle-orm": "^0.45.3",
+    "fastify": "^5.12.5",
     "postgres": "^3.4.9",
     "superjson": "^2.2.6",
     "zod": "^3.25.76"
   },
   "devDependencies": {
-    "@trpc/client": "^11.18.0",
+    "@trpc/client": "^11.19.0",
     "@types/node": "^22.20.1",
-    "drizzle-kit": "^0.31.10",
+    "drizzle-kit": "^0.31.11",
     "tsup": "^8.5.1",
     "tsx": "^4.22.4",
     "typescript": "^6.0.3"
